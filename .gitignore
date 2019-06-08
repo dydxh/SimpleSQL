@@ -2,3 +2,4 @@ cmake-build-debug
 .idea
 .DS_store
 .vscode
+build

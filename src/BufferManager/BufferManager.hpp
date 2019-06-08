@@ -24,4 +24,6 @@ private:
     std::list<BlockPtr> cache;
 };
 
+using BufferPtr = std::shared_ptr<BufferManager>;
+
 #endif

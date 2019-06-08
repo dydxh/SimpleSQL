@@ -7,7 +7,7 @@
 #include <vector>
 #include "../utils/config.hpp"
 
-int file_counter = 0;
+extern int file_counter;
 
 class FileManager {
     FILE* file;
@@ -18,7 +18,9 @@ public:
     FileManager(const char* filename);
     ~FileManager();
 
-    void createfile(const char* filename);
+    static bool filexist(const char* filename);
+    static void createfile(const char* filename);
+    static void writefile(const char* filename, void* src, const int size);
     void openfile(const char* filename);
     
     inline FILE* handler() {return file;}
