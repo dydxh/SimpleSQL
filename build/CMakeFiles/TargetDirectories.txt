@@ -1,3 +1,0 @@
-/home/dydxh/code/MiniSQL/build/CMakeFiles/rebuild_cache.dir
-/home/dydxh/code/MiniSQL/build/CMakeFiles/minisql.dir
-/home/dydxh/code/MiniSQL/build/CMakeFiles/edit_cache.dir
