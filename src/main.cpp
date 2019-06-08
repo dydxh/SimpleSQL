@@ -3,6 +3,7 @@
 #include <cstring>
 #include "BufferManager/BufferManager.hpp"
 #include "CatalogManager/CatalogManager.hpp"
+#include "utils/ErrorManager.hpp"
 
 int main() {
     try {
@@ -15,10 +16,11 @@ int main() {
         attrs.push_back(std::make_shared<Attribute>("val", static_cast<int>(Valuetype::INT) << 1));
         attrs.push_back(std::make_shared<Attribute>("weight", static_cast<int>(Valuetype::FLOAT) << 1));
         catalogmanager->createTable("table_name", 0, attrs);
+        // catalogmanager->dropTable("table_name");
     }
-    catch(std::exception &e) {
+    catch(BasicError &e) {
         std::cout << "Error occur" << std::endl;
-        std::cout << e.what() << std::endl;
+        std::cout << e.msg << std::endl;
     }
     return 0;
 }

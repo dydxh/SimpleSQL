@@ -3,6 +3,7 @@
 #include "../utils/config.hpp"
 #include "CatalogManager.hpp"
 #include "Schema.hpp"
+#include "../utils/ErrorManager.hpp"
 
 CatalogManager::CatalogManager(const BufferPtr& bptr, const std::string name) {
     std::string filename = FILENAME_PREFIX + name + ".catalog";
@@ -41,6 +42,10 @@ void CatalogManager::readbody() {
         SchemaPtr tmpschema = std::make_shared<Schema>(this->file, this->buffer);
 
         tmpblk->read(&(tmpschema->header), sizeof(tmpschema->header));
+        if(tmpschema->header.deleted) {
+            curblk = tmpschema->header.nextblk;
+            continue;
+        }
 
         char tmpname[MAX_NAME_LEN]; int typeval;
         for(int i = 0; i < tmpschema->header.attrcnt; i++) {
@@ -61,13 +66,12 @@ void CatalogManager::readbody() {
 
 void CatalogManager::createTable(const std::string& schemaname, const int& idx, const std::vector<AttrPtr>& attributes) {
     if(schema_exist(schemaname)) {
-        std::cout << "QAQ file exist." << std::endl;
-        return ;
+        throw CatalogError("Schema " + schemaname + " exist.");
     }
-    return ;
     SchemaPtr tmpschema = std::make_shared<Schema>(this->file, this->buffer);
 
     memcpy(tmpschema->header.name, schemaname.c_str(), MAX_NAME_LEN);
+    tmpschema->header.deleted = 0;
     tmpschema->header.attrcnt = attributes.size();
     tmpschema->header.primaryidx = idx;
     for(auto& e : attributes) {
@@ -96,3 +100,14 @@ void CatalogManager::createTable(const std::string& schemaname, const int& idx, 
     }
 }
 
+void CatalogManager::dropTable(const std::string& schemaname) {
+    if(schema_exist(schemaname) == false) {
+        throw CatalogError("Schema " + schemaname + " doesn't exist.");
+    }
+    int offset = name2offset[schemaname], tmpval = 1;
+    BlockPtr tmpblk = buffer->getblock(MakeID(file, offset));
+    tmpblk->setoffset(4);
+    tmpblk->write(&tmpval, sizeof(tmpval));
+    schemas.erase(schemaname);
+    name2offset.erase(schemaname);
+}

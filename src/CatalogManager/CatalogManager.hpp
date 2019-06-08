@@ -33,6 +33,7 @@ public:
     void readbody();
 
     void createTable(const std::string& schemaname, const int& idx, const std::vector<AttrPtr>& attributes);
+    void dropTable(const std::string& schemaname);
 
     bool schema_exist(const std::string& name) {
         return schemas.find(name) != schemas.end();

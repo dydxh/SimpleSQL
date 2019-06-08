@@ -14,7 +14,7 @@
 #include "../utils/config.hpp"
 
 struct SchemaHeader {
-    int nextblk, attrcnt, primaryidx;
+    int nextblk, deleted, attrcnt, primaryidx;
     char name[MAX_NAME_LEN];
 };
 
