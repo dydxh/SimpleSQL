@@ -9,44 +9,22 @@
 #include "../FileManager/FileManager.hpp"
 #include "../BufferManager/BufferManager.hpp"
 #include "../BufferManager/Block.hpp"
-#include "utils/TypeUtils.hpp"
+#include "../Type/Value.hpp"
 // a index key and a struct to find the record in the table file
 
-struct RecordIndex {
-    int blk;
-    int offset;
-};
+const int NODE_SIZE = (BLOCK_SIZE - 2 * sizeof(short) - sizeof(int)) / (sizeof(Value) + sizeof(int));
 
-// need to compute the node size dynamically
-template<typename T>
-class NodeSize {
-public:
-    static const int NODE_SIZE;
-};
-
-// stores exact one node in one block
-template<typename T>
-const int NodeSize<T>::NODE_SIZE =
-        (BLOCK_SIZE - 2 * sizeof(short) - sizeof(int)) / (sizeof(T) + sizeof(int));
-
-#define HALF_NODE_SIZE = ((NODE_SIZE + 1) / 2)
-template<typename T>
-struct BaseNode {
+struct BasicNode {
     short isLeaf;
     short size;
-    T key[NodeSize<T>::NODE_SIZE];
-    // one more value than keys
-    int blknum[NodeSize<T>::NODE_SIZE + 1];
+    Value v[NODE_SIZE];
+    int blknum[NODE_SIZE + 1];
 };
 
-template<typename T>
-const int BplusTree<T>::NODE_SIZE = NodeSize<T>::NODE_SIZE;
-
 // File manager returns blocknum
-template<typename T>
 class BplusTree {
     static const int NODE_SIZE;
-    using Node = BaseNode<T>;
+    using NodePtr = struct BasicNode *;
 
     int now = -1;
 
@@ -66,43 +44,54 @@ public:
     /*
      *  Insert the overflow index node into another node
      * */
-    void insertInto(T v, BlockPtr nextBlock) {
-        if (now == -1) {
-            // root
-            BlockPtr block = createNode();
-            void *src;
-            nextBlock->setoffset(0);
-            nextBlock->read(src, BLOCK_SIZE);
-            block->write(src, BLOCK_SIZE); // automatic dirty
-            // update root node
-            Node node = {.isLeaf = false, .size = 1};
-            node.blknum[0] = block->blocknumber();
-            node.blknum[1] = nextBlock->blocknumber();
-            TypeUtil<T>::set(node.key[0], v);
-            root->setoffset(0);
-            root->write(&node, BLOCK_SIZE);
-        } else {
-            BlockPtr block = stack[now];
-            block->setoffset(sizeof(short));
-            short size;
-            block->read(&size, sizeof(short));
-            int pos = stackPos[now];
-            if (size < NODE_SIZE) {
-                // shift right by 1 to insert
-                for (int i = size; i > pos; i--) {
-                    block->setoffset(2 * sizeof(short) + i * sizeof(T))
-                    TypeUtil<T>::set(node->key[i], node->key[i - 1]);
-                    node->blknum[i + 1] = node->blknum[i];
-                }
-                // do the insertion
-                TypeUtil<T>::set(node->key[pos], v);
-                node->blknum[pos + 1] = nextBlock->blocknumber();
-                node->size ++;
+    void insertInto(Value v, BlockPtr nextBlock) {
 
-            } else {
+    }
 
+    bool insert(Value key, int value) {
+        BlockPtr block =
+    }
+
+    BlockPtr findNode(Value v) {
+        stack.clear();
+        stackPos.clear();
+        BlockPtr blk = root;
+        short isLeaf;
+        blk->setoffset(0);
+        blk->read(isLeaf, sizeof(short));
+        while (!isLeaf) {
+            stack.push_back(blk);
+            Value val;
+            int size;
+            blk->setoffset(2);
+            blk->read(&size, sizeof(short));
+            blk->setoffset(4 + sizeof(Value) * (size - 1));
+            blk->read(&val, sizeof(Value));
+            if (valcmp(val, v) <= 0) {
+                // val <= v
+                stackPos.push_back(size);
+                blk->setoffset(4 + sizeof(Value) * (NODE_SIZE - 1) + sizeof(int) * size);
+                int blknum;
+                blk->read(&blknum, sizeof(int));
+                blk = bufferManager->getblock(MakeID(fileManager, blknum));
+                continue;
             }
+            for (int i = 0; i < size; i++) {
+                blk->setoffset(4 + sizeof(Value) * i);
+                blk->read(&val, sizeof(Value));
+                if (valcmp(val, v) > 0) {
+                    stackPos.push_back(i);
+                    blk->setoffset(4 + sizeof(Value) * (NODE_SIZE - 1) + sizeof(int) * i);
+                    int blknum;
+                    blk->read(&blknum, sizeof(int));
+                    blk = bufferManager->getblock(MakeID(fileManager, blknum));
+                    break;
+                }
+            }
+            blk->setoffset(0);
+            blk->read(isLeaf, sizeof(short));
         }
+        return blk;
     }
 };
 
