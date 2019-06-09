@@ -10,11 +10,9 @@
 #include "../BufferManager/BufferManager.hpp"
 #include "../BufferManager/Block.hpp"
 #include "../Type/Value.hpp"
-//TODO: Implement GETVAL & SETVAL form record manager
+//TODO: Implement GETVAL form record manager
 // TODO: GETVAL is equivalent to <read from the record file with the given record offset>
-// TODO: SETVAL is equivalent to <get the offset from a Value{maybe can be changed to offset directly}>
 #define GETVAL(x) x
-#define SETVAL(x, v) x
 
 #define NEXT_NODE(x) x->foffset[NODE_SIZE]
 #define READ_NODE_BUF(x, y) x->setoffset(0); x->read(y, NODE_SIZE)
@@ -163,7 +161,7 @@ public:
             for (int i = nodeBuffer->size; i >= 1; i--) {
                 if (valcmp(GETVAL(nodeBuffer->roffset[i - 1]), roffset) < 0) {
                     // val < v
-                    SETVAL(nodeBuffer->roffset[i], roffset);
+                    nodeBuffer->roffset[i] = roffset;
                     nodeBuffer->foffset[i] = foffset;
                     x->size++;
                     // write back to block
@@ -176,7 +174,7 @@ public:
                     nodeBuffer->foffset[i] = nodeBuffer->foffset[i - 1];
                 }
             }
-            SETVAL(nodeBuffer->roffset[0]);
+            nodeBuffer->roffset[0] = roffset;
             nodeBuffer->foffset[0] = foffset;
             x->size++;
             // write back to block
@@ -203,7 +201,7 @@ public:
                 for (int i = NODE_SIZE_HALF; i < NODE_SIZE; i++) {
                     if (!flag && valcmp(GETVAL(nodeBuffer->roffset[NODE_SIZE_HALF - 1]), roffset) < 0) {
                         // val < v
-                        SETVAL(nNodeBuffer->roffset[nNodeBuffer->size], roffset);
+                        nNodeBuffer->roffset[nNodeBuffer->size] =roffset;
                         nNodeBuffer->foffset[nNodeBuffer->size++] = foffset;
                         flag = true;
                     }
@@ -211,7 +209,7 @@ public:
                     nNodeBuffer->foffset[nNodeBuffer->size++] = nodeBuffer->foffset[i];
                 }
                 if (!flag) {
-                    SETVAL(nNodeBuffer->roffset[nNodeBuffer->size], roffset);
+                    nNodeBuffer->roffset[nNodeBuffer->size] = roffset;
                     nNodeBuffer->foffset[nNodeBuffer->size++] = foffset;
                 }
             } else {
@@ -225,7 +223,7 @@ public:
                 for (int i = NODE_SIZE_HALF - 1; i >= 1; i--) {
                     if (valcmp(GETVAL(nodeBuffer->roffset[i - 1]), roffset) < 0) {
                         // val < v
-                        SETVAL(nodeBuffer->roffset[i], roffset);
+                        nodeBuffer->roffset[i] = roffset;
                         nodeBuffer->foffset[i] = foffset;
                         flag = true;
                         break;
@@ -235,7 +233,7 @@ public:
                     }
                 }
                 if (!flag) {
-                    SETVAL(nodeBuffer->roffset[0], roffset);
+                    nodeBuffer->roffset[0] = roffset;
                     nodeBuffer->foffset[0] = foffset;
                 }
             }
@@ -243,7 +241,7 @@ public:
             WRITE_BACK_NODE_BUF(blk, nodeBuffer);
             WRITE_BACK_NODE_BUF(nblk, nNodeBuffer);
             stack.push_back(blk);
-            insertInto(GETVAL(nNodeBuffer->roffset[0]), nblk);// update the B+ tree from bottom up
+            insertInto(nNodeBuffer->roffset[0], nblk);// update the B+ tree from bottom up
         }
         // sure the data in write back to the buffer
         WRITE_BACK_NODE_BUF(blk, nodeBuffer);
@@ -254,8 +252,101 @@ public:
     /*
      *  Insert the overflow node into the above node (a recursive update process)
      */
-    void insertInto(long long v, BlockPtr nextBlock) {
+    void insertInto(long long roffset, BlockPtr nextBlock) {
+        if (now == -1) { // root
+            BlockPtr blk = createNode();
+            NodePT nodeBuffer, rootNode;
+            READ_NODE_BUF(stack[0], nodeBuffer);
+            blk->setdirty(true);
 
+            //TODO: check the root
+            READ_NODE_BUF(root, rootNode);
+            rootNode->isLeaf = false;
+            rootNode->size = 1;
+            rootNode->foffset[0] = blk->blocknumber();
+            rootNode->foffset[1] = nextBlock->blocknumber();
+            rootNode->roffset[0] = roffset;
+            // Write back root
+            WRITE_BACK_NODE_BUF(root, rootNode);
+        } else {
+            BlockPtr blk = stack[now];
+            NodePT nodeBuffer;
+            READ_NODE_BUF(blk, nodeBuffer);
+            int pos = stackPos[now];
+            // insert at (rofst[i], fofst[i + 1]) (i = pos)
+            if (nodeBuffer->size < NODE_SIZE) {
+                // the Node is not full just fo a simple insert
+                for (int i = nodeBuffer->size; i > pos; i--) {
+                    // shift the values
+                    nodeBuffer->roffset[i] = nodeBuffer->roffset[i - 1];
+                    nodeBuffer->foffset[i] = nodeBuffer->foffset[i - 1];
+                }
+                nodeBuffer->roffset[pos] = roffset;
+                nodeBuffer->foffset[pos + 1] = nextBlock->blocknumber();
+                nodeBuffer->size++;
+            } else {
+                /* the node is full and needs splitting
+                 * When the target non-leaf node is full, split is required
+                 * unlike split the leaf-node, the left-most son ptr has no
+                 * index value, so the result size is (HALF, HALF - 1)
+                 */
+                BlockPtr nblk = createNode();
+                NodePT nNodeBuffer;
+                long long parentValue;
+                READ_NODE_BUF(nblk, nNodeBuffer);
+                nNodeBuffer->isLeaf = false;
+                nodeBuffer->size = NODE_SIZE_HALF;
+                if (pos > NODE_SIZE_HALF) {
+                    // origin node is well-done
+                    // target node requires insert new value
+                    // the node spilt method is like following
+                    // v: [* * *] (*) [& *]   >>> throw the (*)
+                    // s:[0 1 2 3]   [4 & 5]  >>> find place to insert
+                    parentValue = nodeBuffer->roffset[NODE_SIZE_HALF];
+                    nNodeBuffer->foffset[0] = nodeBuffer->foffset[NODE_SIZE_HALF + 1];
+                    for (int i = NODE_SIZE_HALF + 1; i <= NODE_SIZE; i++) {
+                        if (i == pos) {
+                            nNodeBuffer->roffset[nNodeBuffer->size] = roffset;
+                        }
+                        if (i != NODE_SIZE) {
+                            nNodeBuffer->roffset[nNodeBuffer->size] = nodeBuffer->roffset[i];
+                            nNodeBuffer->foffset[++nNodeBuffer->size] = nodeBuffer->foffset[i + 1];
+                        }
+                    }
+                } else { // pos <= NODE_SIZE_HALF >>> just copy the values to target node
+                    nNodeBuffer->foffset[0] = nodeBuffer->foffset[NODE_SIZE_HALF];
+                    for (int i = NODE_SIZE_HALF; i < NODE_SIZE; i++) {
+                        nNodeBuffer->roffset[nNodeBuffer->size++] = nodeBuffer->roffset[i];
+                        nNodeBuffer->foffset[nNodeBuffer->size] = nodeBuffer->foffset[i + 1];
+                    }
+                    if (pos == NODE_SIZE_HALF) {
+                        // do simple replacement
+                        // v: [* * *] (&) [* *]   >>> throw the (&)
+                        // s:[0 1 2 3]   [& 4 5]  >>> do the simple replacement
+                        nNodeBuffer->foffset[0] = nextBlock->blocknumber();
+                        parentValue = roffset;
+                    } else {
+                        // origin node requires insertion
+                        // v: [* * &] (*) [* *]   >>> throw the (*)
+                        // s:[0 1 2 &]   [3 4 5]  >>> find place to insert
+                        parentValue = nodeBuffer->roffset[NODE_SIZE_HALF - 1];
+                        for (int i = NODE_SIZE_HALF - 1; i >= 0; i--) {
+                            if (i == pos) {
+                                nodeBuffer->foffset[i + 1] = nextBlock->blocknumber();
+                                nodeBuffer->roffset[i] = roffset;
+                                break;
+                            }
+                            nodeBuffer->foffset[i + 1] = nodeBuffer->foffset[i];
+                            nodeBuffer->roffset[i] = nodeBuffer->roffset[i - 1];
+                        }
+                    }
+                }
+                WRITE_BACK_NODE_BUF(nblk, nNodeBuffer);
+                WRITE_BACK_NODE_BUF(blk, nodeBuffer);
+                now --; // do recursion
+                insertInto(parentValue, nblk);
+            }
+        }
     }
 };
 
