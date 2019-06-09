@@ -20,6 +20,7 @@ class Value {
 public:
     Type type;
     void *ptr;
+    unsigned char charlen;
 };
 
 class IntValue : public Value {
@@ -37,9 +38,10 @@ class FloatValue : public Value {
 };
 
 class CharValue : public Value {
-    CharValue(char *ptr_) {
+    CharValue(char *ptr_, unsigned char len_) {
         this->type = Type::CHAR;
         this->ptr = ptr_;
+        this->charlen = len_;
     }
 };
 
