@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <cstdio>
+#include <vector>
 #include <cstring>
 #include "../utils/ErrorManager.hpp"
 
@@ -70,5 +71,7 @@ static int valcmp(Value a, Value b) {
         }
     }
 }
+
+using Record = std::vector<Value>;
 
 #endif //MINISQL_VALUE_HPP

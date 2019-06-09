@@ -9,6 +9,7 @@ int main() {
     try {
         BufferPtr buffermanager = std::make_shared<BufferManager>();
         CatalogPtr catalogmanager = std::make_shared<CatalogManager>(buffermanager, CATALOG_NAME);
+        CatalogPtr tester = std::make_shared<CatalogManager>(buffermanager, CATALOG_NAME);
 
         std::vector<AttrPtr> attrs;
         attrs.push_back(std::make_shared<Attribute>("id", (static_cast<int>(Type::INT) << 1) | 1));

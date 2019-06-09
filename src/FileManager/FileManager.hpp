@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <map>
 #include "../utils/config.hpp"
 
 extern int file_counter;
@@ -14,6 +15,7 @@ class FileManager {
     int fidx;
     unsigned int blockcnt;
 public:
+    static std::map<std::string, std::weak_ptr<FileManager>> filebuf;
     FileManager();
     FileManager(const char* filename);
     ~FileManager();

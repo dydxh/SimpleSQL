@@ -4,6 +4,7 @@
 #include "CatalogManager.hpp"
 #include "Schema.hpp"
 #include "../utils/ErrorManager.hpp"
+#include "../FileManager/FileManager.hpp"
 
 CatalogManager::CatalogManager(const BufferPtr& bptr, const std::string name) {
     std::string filename = FILENAME_PREFIX + name + ".catalog";
@@ -13,6 +14,7 @@ CatalogManager::CatalogManager(const BufferPtr& bptr, const std::string name) {
     if(FileManager::filexist(filename.c_str()) == false) {
         FileManager::createfile(filename.c_str());
         file = std::make_shared<FileManager>(filename.c_str());
+        FileManager::filebuf[filename] = file;
         assert(file->allocblock() == 0);
         CatalogHeader tmpheader{1, 0, 0, 0};
         BlockPtr tmpblk = buffer->getblock(MakeID(file, 0));
@@ -20,7 +22,12 @@ CatalogManager::CatalogManager(const BufferPtr& bptr, const std::string name) {
         tmpblk->write(&tmpheader, sizeof(tmpheader));
     }
     else {
-        file = std::make_shared<FileManager>(filename.c_str());
+        if(FileManager::filebuf[filename].expired() == false)
+            file = FileManager::filebuf[filename].lock();
+        else {
+            file = std::make_shared<FileManager>(filename.c_str());
+            FileManager::filebuf[filename] = file;
+        }
     }
     
     //read header

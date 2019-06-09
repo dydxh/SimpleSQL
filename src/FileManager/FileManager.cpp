@@ -8,6 +8,8 @@
 char emptybuffer[BLOCK_SIZE];
 int file_counter = 0;
 
+std::map<std::string, std::weak_ptr<FileManager>> FileManager::filebuf;
+
 FileManager::FileManager() {
     file = nullptr;
     blockcnt = fidx = 0;
