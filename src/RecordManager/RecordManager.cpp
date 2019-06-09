@@ -5,7 +5,8 @@
 #include "../Type/Value.hpp"
 
 using FilePos = std::pair<int, int>;
-auto CalcFilePos = [](const int& pos) {return std::make_pair(pos / BLOCK_SIZE, pos % BLOCK_SIZE);};
+auto CalcFilePos = [](const unsigned long long& pos) {return std::make_pair(pos / BLOCK_SIZE, pos % BLOCK_SIZE);};
+auto ReadRecord = []() {};
 
 RecordManager::RecordManager(const BufferPtr& buffer, const CatalogPtr& catalog, std::string schemaname) {
     if(catalog->schema_exist(schemaname) == false) {
@@ -48,13 +49,11 @@ void RecordManager::readheader() {
     tmpblk->read(&(this->header), sizeof(header));
 }
 
-int RecordManager::inserter(const Record& record) {
+void RecordManager::inserter(const Record& record) {
     FilePos pos = CalcFilePos(header.freestart);
     BlockPtr tmpblk = buffer->getblock(MakeID(file, pos.first));
     tmpblk->setoffset(pos.second);
 
-    int a = record.size();
-    int b = schema->attrs.size();
     if(record.size() != schema->attrs.size())
         throw TypeError("[Error] Column number error. Except " + std::to_string(record.size()) + " got " + std::to_string(schema->attrs.size()) + ".");
     for(int i = 0; i < record.size(); i++) {
@@ -85,5 +84,97 @@ int RecordManager::inserter(const Record& record) {
     tmpblk = buffer->getblock(MakeID(file, 0));
     tmpblk->setoffset(0);
     tmpblk->write(&(this->header), sizeof(this->header));
-    return 0;
+}
+
+int RecordManager::deleteall() {
+    int retval = header.recordnumber;
+    header.recordnumber = 0;
+    header.recordstart = 0;
+    header.freestart = BLOCK_SIZE;
+    BlockPtr tmpblk = buffer->getblock(MakeID(file, 0));
+    tmpblk->setoffset(0);
+    tmpblk->write(&this->header, sizeof(this->header));
+    return retval;
+}
+
+int RecordManager::deleter(const Limits& limit) {
+    int retval = 0;
+    BlockPtr tmpblk;
+    unsigned long long ptr = header.recordstart;
+    while(ptr) {
+        FilePos pos = CalcFilePos(ptr);
+        tmpblk = buffer->getblock(MakeID(file, pos.first));
+        tmpblk->setoffset(pos.second);
+        tmpblk->read(&ptr, sizeof(unsigned long long));
+        if(ptr & DELETE_TAG) {
+            ptr &= DELETE_MASK;
+            continue;
+        }
+        Record record;
+        for(auto& e : schema->attrs) {
+            Value val;
+            val.type = e->vtype;
+            if(val.type == Type::CHAR) {
+                val.clen = e->clen;
+                val.ptr = new char[val.clen];
+            }
+            else if(val.type == Type::INT) val.ptr = new int;
+            else val.ptr = new float;
+            tmpblk->read(val.ptr, e->size());
+            record.emplace_back(std::move(val));
+        }
+        bool to_delete = true;
+        for(auto& e : limit) {
+            to_delete &= Constraint::valcmp(e.op, record[e.attridx], e.val);
+            if(to_delete == false) break;
+        }
+        if(to_delete) {
+            retval += 1;
+            unsigned long long newval = ptr | DELETE_TAG;
+            tmpblk->setoffset(pos.second);
+            tmpblk->write(&newval, sizeof(unsigned long long));
+        }
+    }
+    header.recordnumber -= retval;
+    tmpblk = buffer->getblock(MakeID(file, 0));
+    tmpblk->setoffset(0);
+    tmpblk->write(&this->header, sizeof(this->header));
+    return retval;
+}
+
+std::vector<Record> RecordManager::selecter(const Limits& limit) {
+    std::vector<Record> retval;
+    BlockPtr tmpblk;
+    unsigned long long ptr = header.recordstart;
+
+    while(ptr) {
+        FilePos pos = CalcFilePos(ptr);
+        tmpblk = buffer->getblock(MakeID(file, pos.first));
+        tmpblk->setoffset(pos.second);
+        tmpblk->read(&ptr, sizeof(unsigned long long));
+        if(ptr & DELETE_TAG) {
+            ptr &= DELETE_MASK;
+            continue;
+        }
+        Record record;
+        for(auto& e : schema->attrs) {
+            Value val;
+            val.type = e->vtype;
+            if(val.type == Type::CHAR) {
+                val.clen = e->clen;
+                val.ptr = new char[val.clen];
+            }
+            else if(val.type == Type::INT) val.ptr = new int;
+            else val.ptr = new float;
+            tmpblk->read(val.ptr, e->size());
+            record.emplace_back(std::move(val));
+        }
+        bool reserved = true;
+        for(auto& e : limit) {
+            reserved &= Constraint::valcmp(e.op, record[e.attridx], e.val);
+            if(reserved == false) break;
+        }
+        if(reserved) retval.emplace_back(std::move(record));
+    }
+    return retval;
 }

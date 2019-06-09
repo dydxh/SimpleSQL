@@ -40,6 +40,7 @@ public:
             case Type::CHAR :
                 return clen;
         }
+        return -1;
     }
 };
 

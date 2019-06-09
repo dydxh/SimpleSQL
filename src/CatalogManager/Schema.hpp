@@ -12,6 +12,7 @@
 #include "../BufferManager/BufferManager.hpp"
 #include "Attribute.hpp"
 #include "../utils/config.hpp"
+#include "../Type/constraint.hpp"
 
 struct SchemaHeader {
     int nextblk, deleted, attrcnt, primaryidx;
@@ -28,6 +29,7 @@ public:
 
     Schema(const FilePtr& fptr, const BufferPtr& bptr) : file(fptr), buffer(bptr) {}
     ~Schema() {}
+    bool checkConstraint(const Limits& limit);
 };
 
 using SchemaPtr = std::shared_ptr<Schema>;

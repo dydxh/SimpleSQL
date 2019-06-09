@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <memory>
 #include "../Type/Value.hpp"
+#include "../Type/constraint.hpp"
 #include "../BufferManager/BufferManager.hpp"
 #include "../FileManager/FileManager.hpp"
 #include "../CatalogManager/CatalogManager.hpp"
@@ -27,8 +28,10 @@ public:
     RecordManager(const BufferPtr& buffer, const CatalogPtr& catalog, const std::string schemaname);
     ~RecordManager();
 
-    int inserter(const Record& record);
-    void deleter() {}
+    void inserter(const Record& record);
+    int deleteall();
+    int deleter(const Limits& limit);
+    std::vector<Record> selecter(const Limits& limit);
     void readheader();
     
 };

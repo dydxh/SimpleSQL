@@ -1,10 +1,32 @@
 #include <cstdio>
 #include <iostream>
 #include <cstring>
+#include <string>
 #include "BufferManager/BufferManager.hpp"
 #include "CatalogManager/CatalogManager.hpp"
 #include "RecordManager/RecordManager.hpp"
 #include "utils/ErrorManager.hpp"
+
+void adder(RecordPtr recordmanager, int a, const char* b, int c, float d) {
+    Record tmpr;
+    Value tmp;
+    tmp.type = Type::INT;
+    tmp.ptr = new int(a);
+    tmpr.push_back(tmp);
+    tmp.type = Type::CHAR;
+    tmp.clen = strlen(b) + 1;
+    tmp.ptr = new char[tmp.clen];
+    strcpy((char*)tmp.ptr, b);
+    tmpr.push_back(tmp);
+    tmp.type = Type::INT;
+    tmp.ptr = new int(c);
+    tmpr.push_back(tmp);
+    tmp.type = Type::FLOAT;
+    tmp.ptr = new float(d);
+    tmpr.push_back(tmp);
+
+    recordmanager->inserter(tmpr);
+}
 
 int main() {
     try {
@@ -12,25 +34,48 @@ int main() {
         CatalogPtr catalogmanager = std::make_shared<CatalogManager>(buffermanager, CATALOG_NAME);
         RecordPtr recordmanager = std::make_shared<RecordManager>(buffermanager, catalogmanager, "table_name");
 
-        // return 0;
-        Record tmpr;
-        Value tmp;
-        tmp.type = Type::INT;
-        tmp.ptr = new int(1);
-        tmpr.push_back(tmp);
-        tmp.type = Type::CHAR;
-        char newval[] = "dydxh?!";
-        tmp.ptr = newval;
-        tmp.clen = 7;
-        tmpr.push_back(tmp);
-        tmp.type = Type::INT;
-        tmp.ptr = new int(2333);
-        tmpr.push_back(tmp);
-        tmp.type = Type::FLOAT;
-        tmp.ptr = new float(3.1415926);
-        tmpr.push_back(tmp);
+        adder(recordmanager, 1, "dydxh!?", 2333, 2.345);
+        adder(recordmanager, 2, "qaqovoqqqq", 3444, 3.456);
+        adder(recordmanager, 3, "just a test", 4555, 4.567);
+        adder(recordmanager, 4, "another testow", 5666, 5.678);
 
-        recordmanager->inserter(tmpr);
+        Limits limit;
+        Constraint ccc;
+        Value vvv;
+        vvv.type = Type::INT; vvv.ptr = new int(3000);
+        ccc.attridx = 2; ccc.op = Operator::LEQ; ccc.val = vvv;
+        limit.push_back(ccc);
+        std::vector<Record> res = recordmanager->selecter(limit);
+        for(auto& e : res) {
+            std::cout << "==> ";
+            for(auto& t : e) {
+                std::cout << t.tostr() << ' ';
+            }
+            std::cout << std::endl;
+        }
+        recordmanager->deleter(limit);
+        std::cout << "After delete" << std::endl;
+        res = recordmanager->selecter(limit);
+        for(auto& e : res) {
+            std::cout << "==> ";
+            for(auto& t : e) {
+                std::cout << t.tostr() << ' ';
+            }
+            std::cout << std::endl;
+        }
+        std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
+        limit.clear();
+        ccc.op = Operator::GEQ;
+        limit.push_back(ccc);
+        res = recordmanager->selecter(limit);
+        for(auto& e : res) {
+            std::cout << "==> ";
+            for(auto& t : e) {
+                std::cout << t.tostr() << ' ';
+            }
+            std::cout << std::endl;
+        }
+        recordmanager->deleteall();
         // std::vector<AttrPtr> attrs;
         // attrs.push_back(std::make_shared<Attribute>("id", (static_cast<int>(Type::INT) << 1) | 1));
         // attrs.push_back(std::make_shared<Attribute>("name", (0x10 << 3) | (static_cast<int>(Type::CHAR) << 1)));
