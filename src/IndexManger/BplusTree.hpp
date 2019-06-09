@@ -14,11 +14,13 @@
 
 const int NODE_SIZE = (BLOCK_SIZE - 2 * sizeof(short) - sizeof(int)) / (sizeof(Value) + sizeof(int));
 
+
+
 struct BasicNode {
     short isLeaf;
     short size;
-    Value v[NODE_SIZE];
-    int blknum[NODE_SIZE + 1];
+    long long roffset[NODE_SIZE]; // record offset
+    long long foffset[NODE_SIZE + 1]; // per file offset 
 };
 
 // File manager returns blocknum
@@ -27,8 +29,9 @@ class BplusTree {
     using NodePtr = struct BasicNode *;
 
     int now = -1;
-
+    
     BlockPtr root = 0;
+    // Externel dependencies
     FilePtr fileManager;
     BufferPtr bufferManager;
 
@@ -49,7 +52,7 @@ public:
     }
 
     bool insert(Value key, int value) {
-        BlockPtr block =
+        BlockPtr block = 
     }
 
     BlockPtr findNode(Value v) {
@@ -89,7 +92,7 @@ public:
                 }
             }
             blk->setoffset(0);
-            blk->read(isLeaf, sizeof(short));
+            blk->read(&isLeaf, sizeof(short));
         }
         return blk;
     }

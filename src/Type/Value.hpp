@@ -9,6 +9,7 @@ class Value {
 public:
     Type type;
     void *ptr;
+    virtual int size(){};
 };
 
 class IntValue : public Value {
