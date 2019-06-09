@@ -9,6 +9,7 @@ class Value {
 public:
     Type type;
     void *ptr;
+    unsigned char charlen;
     virtual int size(){};
 };
 
@@ -46,7 +47,7 @@ static int valcmp(Value a, Value b) {
             case Type::FLOAT:
                 return *((float *) a.ptr) > *((float *) b.ptr) ? 1 : (*((float *) a.ptr) < *((float *) b.ptr) ? -1 : 0);
             case Type::CHAR:
-                return strcmp((char *)a.ptr, (char *)b.ptr);
+                return strncmp((char *)a.ptr, (char *)b.ptr, a.);
         }
     }
 }

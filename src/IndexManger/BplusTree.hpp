@@ -10,33 +10,34 @@
 #include "../BufferManager/BufferManager.hpp"
 #include "../BufferManager/Block.hpp"
 #include "../Type/Value.hpp"
+
+#define GETVAL(x) x
 // a index key and a struct to find the record in the table file
 
-const int NODE_SIZE = (BLOCK_SIZE - 2 * sizeof(short) - sizeof(int)) / (sizeof(Value) + sizeof(int));
-
+const int NODE_SIZE = (BLOCK_SIZE - 2 * sizeof(short) - sizeof(long long)) / (sizeof(long long) + sizeof(long long));
 
 
 struct BasicNode {
     short isLeaf;
     short size;
     long long roffset[NODE_SIZE]; // record offset
-    long long foffset[NODE_SIZE + 1]; // per file offset 
+    long long foffset[NODE_SIZE + 1];
 };
 
 // File manager returns blocknum
 class BplusTree {
-    static const int NODE_SIZE;
-    using NodePtr = struct BasicNode *;
+    using NodePT = struct BasicNode *;
+
+    BlockPtr root = 0;
 
     int now = -1;
-    
-    BlockPtr root = 0;
-    // Externel dependencies
+    std::vector<BlockPtr> stack;
+    std::vector<int> stackPos;
+    // External dependencies
+    // RecordPtr recordManager
     FilePtr fileManager;
     BufferPtr bufferManager;
 
-    std::vector<BlockPtr> stack;
-    std::vector<int> stackPos;
 public:
     // TODO: Constructor
     BlockPtr createNode() {
@@ -52,49 +53,46 @@ public:
     }
 
     bool insert(Value key, int value) {
-        BlockPtr block = 
+        // BlockPtr block = 
     }
 
     BlockPtr findNode(Value v) {
         stack.clear();
         stackPos.clear();
+        // read all the value to a temp
+        NodePT nodeBuffer;
         BlockPtr blk = root;
-        short isLeaf;
         blk->setoffset(0);
-        blk->read(isLeaf, sizeof(short));
-        while (!isLeaf) {
+        blk->read(nodeBuffer, NODE_SIZE);
+        while (!nodeBuffer->isLeaf) {
             stack.push_back(blk);
-            Value val;
-            int size;
-            blk->setoffset(2);
-            blk->read(&size, sizeof(short));
-            blk->setoffset(4 + sizeof(Value) * (size - 1));
-            blk->read(&val, sizeof(Value));
-            if (valcmp(val, v) <= 0) {
+            // TODO: implement GETVAL
+            if (valcmp(GETVAL(nodeBuffer->roffset[nodeBuffer->size - 1]), v) <= 0) {
                 // val <= v
-                stackPos.push_back(size);
-                blk->setoffset(4 + sizeof(Value) * (NODE_SIZE - 1) + sizeof(int) * size);
-                int blknum;
-                blk->read(&blknum, sizeof(int));
-                blk = bufferManager->getblock(MakeID(fileManager, blknum));
+                stackPos.push_back(nodeBuffer->size);
+                blk = bufferManager->getblock(MakeID(fileManager, nodeBuffer->roffset[size]));
+                blk->setoffset(0);
+                blk->read(nodeBuffer, NODE_SIZE);
                 continue;
             }
-            for (int i = 0; i < size; i++) {
-                blk->setoffset(4 + sizeof(Value) * i);
-                blk->read(&val, sizeof(Value));
-                if (valcmp(val, v) > 0) {
+            for (int i; i < nodeBuffer->size; i++) {
+                if (valcmp(GETVAL(nodeBuffer->roffset[i].i, v)) > 0) {
+                    // val > v
                     stackPos.push_back(i);
-                    blk->setoffset(4 + sizeof(Value) * (NODE_SIZE - 1) + sizeof(int) * i);
-                    int blknum;
-                    blk->read(&blknum, sizeof(int));
-                    blk = bufferManager->getblock(MakeID(fileManager, blknum));
+                    blk = bufferManager->getblock(MakeID(fileManager, nodeBuffer->roffset[i]));
+                    // update node buffer
+                    blk->setoffset(0);
+                    blk->read(nodeBuffer, NODE_SIZE);
                     break;
                 }
             }
-            blk->setoffset(0);
-            blk->read(&isLeaf, sizeof(short));
+            return blk;
         }
-        return blk;
+    }
+
+    /* ---------- USED BY QUERY ------------ */
+    long long findOne(Value v) {
+        BlockPtr blk = findNode(v);
     }
 };
 
