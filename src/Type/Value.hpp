@@ -17,6 +17,8 @@ enum class Type {
     CHAR
 };
 
+extern std::string tostr(Type type);
+
 class Value {
 public:
     Type type;
@@ -71,7 +73,5 @@ static int valcmp(Value a, Value b) {
         }
     }
 }
-
-using Record = std::vector<Value>;
 
 #endif //MINISQL_VALUE_HPP

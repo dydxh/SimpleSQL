@@ -39,4 +39,9 @@ public:
     TypeError(const std::string &msg) : BasicError(msg) {}
 };
 
+class SchemaError : public BasicError {
+public:
+    SchemaError(const std::string& msg) : BasicError(msg) {}
+};
+
 #endif

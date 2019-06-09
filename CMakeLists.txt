@@ -17,6 +17,10 @@ file(GLOB SOURCE_FILES
         "src/BufferManager/*.cpp"
         "src/FileManager/*.hpp"
         "src/FileManager/*.cpp"
+        "src/RecordManager/*.hpp"
+        "src/RecordManager/*.cpp"
+        "src/Type/*.hpp"
+        "src/Type/*.cpp"
         "src/utils/*.hpp"
         "src/utils/*.cpp"
         )
