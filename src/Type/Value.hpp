@@ -20,12 +20,18 @@ class Value {
 public:
     Type type;
     void *ptr;
+    unsigned char clen;
+
+    virtual int size() {return 0;}
 };
 
 class IntValue : public Value {
     IntValue(int *ptr_) {
         this->type = Type::INT;
         this->ptr = ptr_;
+    }
+    int size() override {
+        return sizeof(int);
     }
 };
 
@@ -34,12 +40,19 @@ class FloatValue : public Value {
         this->type = Type::FLOAT;
         this->ptr = ptr_;
     }
+    int size() override {
+        return sizeof(float);
+    }
 };
 
 class CharValue : public Value {
-    CharValue(char *ptr_) {
+    CharValue(char *ptr_, unsigned char clen_) {
         this->type = Type::CHAR;
         this->ptr = ptr_;
+        this->clen = clen_;
+    }
+    int size() override {
+        return clen;
     }
 };
 
