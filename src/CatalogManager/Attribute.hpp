@@ -6,29 +6,24 @@
 #include <string>
 #include <cstring>
 #include <memory>
-
-enum class Valuetype {
-    INT,
-    FLOAT,
-    CHAR
-};
+#include "../Type/Value.hpp"
 
 class Attribute {
 public:
     std::string name;
     int unique, clen;
-    Valuetype vtype;
+    Type vtype;
 
     Attribute(const std::string name, const int val) : name(name) {
         unique = val & 1;
-        vtype = static_cast<Valuetype>((val >> 1) & 3);
+        vtype = static_cast<Type>((val >> 1) & 3);
         clen = val >> 3;
     }
     ~Attribute() {};
     
     inline void setattr(int val) {
         unique = val & 1;
-        vtype = static_cast<Valuetype>((val >> 1) & 3);
+        vtype = static_cast<Type>((val >> 1) & 3);
         clen = val >> 3;
     }
     inline int getattr() {

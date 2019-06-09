@@ -34,4 +34,9 @@ public:
     CatalogError(const std::string& msg) : BasicError(msg) {}
 };
 
+class TypeError : public BasicError {
+public:
+    TypeError(const std::string &msg) : BasicError(msg) {}
+};
+
 #endif
