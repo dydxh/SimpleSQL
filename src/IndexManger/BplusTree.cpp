@@ -2,7 +2,7 @@
 // Created by Henry Little on 2019-06-08.
 //
 #include "BplusTree.hpp"
-
+#include "../Type/Value.hpp"
 
 BlockPtr BplusTree::findNode(Value v) {
     stack.clear();
@@ -14,7 +14,7 @@ BlockPtr BplusTree::findNode(Value v) {
     blk->read(nodeBuffer, NODE_SIZE);
     while (!nodeBuffer->isLeaf) {
         stack.push_back(blk);
-        if (valcmp(GETVAL(nodeBuffer->roffset[nodeBuffer->size - 1]), v) <= 0) {
+        if (Value::valcmp(GETVAL(nodeBuffer->roffset[nodeBuffer->size - 1]), v) <= 0) {
             // val <= v
             stackPos.push_back(nodeBuffer->size);
             blk = bufferManager->getblock(MakeID(fileManager, nodeBuffer->foffset[nodeBuffer->size]));
@@ -22,7 +22,7 @@ BlockPtr BplusTree::findNode(Value v) {
             continue;
         }
         for (int i; i < nodeBuffer->size; i++) {
-            if (valcmp(GETVAL(nodeBuffer->roffset[i].i), v) > 0) {
+            if (Value::valcmp(GETVAL(nodeBuffer->roffset[i].i), v) > 0) {
                 // val > v
                 stackPos.push_back(i);
                 blk = bufferManager->getblock(MakeID(fileManager, nodeBuffer->foffset[i]));
@@ -41,7 +41,7 @@ long long BplusTree::findOne(Value v) {
     blk->setoffset(0);
     blk->read(nodeBuffer, NODE_SIZE);
     for (int i = 0; i < nodeBuffer->size; i++) {
-        if (0 == valcmp(GETVAL(nodeBuffer->roffset[i]), v)) {
+        if (0 == Value::valcmp(GETVAL(nodeBuffer->roffset[i]), v)) {
             return nodeBuffer->roffset[i];
         }
     }
@@ -74,8 +74,8 @@ int BplusTree::findByRange(
         bool find = false;
         // find? the lower bound
         for (int i = 0; i < nodeBuffer->size; i++) {
-            if (valcmp(GETVAL(nodeBuffer->roffset[i]), l) > 0
-                || (valcmp(GETVAL(nodeBuffer->roffset[i]), l) == 0 && leq)) {
+            if (Value::valcmp(GETVAL(nodeBuffer->roffset[i]), l) > 0
+                || (Value::valcmp(GETVAL(nodeBuffer->roffset[i]), l) == 0 && leq)) {
                 // val > l
                 find = true;
                 now = i;
@@ -93,8 +93,8 @@ int BplusTree::findByRange(
     }
     while (true) {
         for (int i = now; i < nodeBuffer->size; i++) {
-            if (wr && (valcmp(GETVAL(nodeBuffer->roffset[i]), r) > 0
-                       || (valcmp(GETVAL(nodeBuffer->roffset[i]), r) == 0 && !req))) {
+            if (wr && (Value::valcmp(GETVAL(nodeBuffer->roffset[i]), r) > 0
+                       || (Value::valcmp(GETVAL(nodeBuffer->roffset[i]), r) == 0 && !req))) {
                 return count;
             }
             consumer(count++, nodeBuffer->foffset[i]);
@@ -110,7 +110,7 @@ bool BplusTree::insert(long long roffset, long long foffset) {
     if (nodeBuffer->size < NODE_SIZE) {
         // the node is not full, just insert
         for (int i = nodeBuffer->size; i >= 1; i--) {
-            if (valcmp(GETVAL(nodeBuffer->roffset[i - 1]), v) < 0) {
+            if (Value::valcmp(GETVAL(nodeBuffer->roffset[i - 1]), v) < 0) {
                 // val < v
                 nodeBuffer->roffset[i] = roffset;
                 nodeBuffer->foffset[i] = foffset;
@@ -118,7 +118,7 @@ bool BplusTree::insert(long long roffset, long long foffset) {
                 // write back to block
                 WRITE_BACK_NODE_BUF(blk, nodeBuffer);
                 return true; // insertion complete
-            } else if (0 == valcmp(GETVAL(nodeBuffer->roffset[i - 1]), v)) {
+            } else if (0 == Value::valcmp(GETVAL(nodeBuffer->roffset[i - 1]), v)) {
                 return false; // duplicate value
             } else {
                 nodeBuffer->roffset[i] = nodeBuffer->roffset[i - 1];
@@ -133,7 +133,7 @@ bool BplusTree::insert(long long roffset, long long foffset) {
     } else {
         // if there is a equal key
         for (int i = nodeBuffer->size; i >= 1; i--) {
-            if (0 == valcmp(GETVAL(nodeBuffer->roffset[i - 1]), v)) return false;
+            if (0 == Value::valcmp(GETVAL(nodeBuffer->roffset[i - 1]), v)) return false;
         }
         // split the node into [HALF_NODE_SIZE, HALF_NODE_SIZE]
         // then do a recursive insertion
@@ -145,12 +145,12 @@ bool BplusTree::insert(long long roffset, long long foffset) {
         nNodeBuffer->isLeaf = true;
         nNodeBuffer->size = 0;
         nodeBuffer->size = NODE_SIZE_HALF;
-        if (valcmp(GETVAL(nodeBuffer->roffset[NODE_SIZE_HALF - 1]), v) < 0) {
+        if (Value::valcmp(GETVAL(nodeBuffer->roffset[NODE_SIZE_HALF - 1]), v) < 0) {
             // val < v
             // nodeBuffer do not requires further modifications -> write back to buffer
             bool flag = false; // weather the value is inserted
             for (int i = NODE_SIZE_HALF; i < NODE_SIZE; i++) {
-                if (!flag && valcmp(GETVAL(nodeBuffer->roffset[NODE_SIZE_HALF - 1]), v) < 0) {
+                if (!flag && Value::valcmp(GETVAL(nodeBuffer->roffset[NODE_SIZE_HALF - 1]), v) < 0) {
                     // val < v
                     nNodeBuffer->roffset[nNodeBuffer->size] = roffset;
                     nNodeBuffer->foffset[nNodeBuffer->size++] = foffset;
@@ -172,7 +172,7 @@ bool BplusTree::insert(long long roffset, long long foffset) {
             }
             // origin node needs a insertion
             for (int i = NODE_SIZE_HALF - 1; i >= 1; i--) {
-                if (valcmp(GETVAL(nodeBuffer->roffset[i - 1]), v) < 0) {
+                if (Value::valcmp(GETVAL(nodeBuffer->roffset[i - 1]), v) < 0) {
                     // val < v
                     nodeBuffer->roffset[i] = roffset;
                     nodeBuffer->foffset[i] = foffset;
@@ -302,7 +302,7 @@ bool BplusTree::remove(Value v) {
     READ_NODE_BUF(blk, nodeBuffer);
     int pos;
     for (pos = 0; pos < nodeBuffer->size; pos++) {
-        if (0 == valcmp(GETVAL(nodeBuffer->roffset[pos]), v)) break;
+        if (0 == Value::valcmp(GETVAL(nodeBuffer->roffset[pos]), v)) break;
     }
     if (pos == nodeBuffer->size) return false;
 

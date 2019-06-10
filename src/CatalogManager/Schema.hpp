@@ -26,6 +26,8 @@ public:
     BufferPtr buffer;
     std::map<std::string, AttrPtr> name2attrs;
     std::vector<AttrPtr> attrs;
+    std::map<std::string, int> name2offset;
+    std::vector<int> idx2offset;
 
     Schema(const FilePtr& fptr, const BufferPtr& bptr) : file(fptr), buffer(bptr) {}
     ~Schema() {}

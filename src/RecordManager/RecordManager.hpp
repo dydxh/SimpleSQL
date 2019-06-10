@@ -33,6 +33,7 @@ public:
     int deleter(const Limits& limit);
     std::vector<Record> selecter(const Limits& limit);
     void readheader();
+    void* getval(AttrPtr attr, unsigned long long offset);
     
 };
 
