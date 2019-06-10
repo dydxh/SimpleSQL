@@ -11,6 +11,13 @@ enum class Operator {
     EQ, NEQ, GT, LT, LEQ, GEQ
 };
 
+class RawConstraint {
+public:
+    std::string name;
+    Operator op;
+    Value val;
+};
+
 class Constraint {
 public:
     int attridx;
@@ -39,6 +46,7 @@ public:
     }
 };
 
+using RawLimits = std::vector<RawConstraint>;
 using Limits = std::vector<Constraint>;
 
 #endif

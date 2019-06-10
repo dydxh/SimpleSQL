@@ -20,9 +20,11 @@ public:
 
     void inserter(const std::string& tablename, const Record& record);
 
-    int deleter(const std::string& tablename, const Limits& limit);
+    int deleter(const std::string& tablename, const RawLimits& limit);
 
-    std::vector<Record> selecter(const std::string& tablename, const std::vector<std::string>& attrs, const Limits& limit);
+    std::vector<Record> selecter(const std::string& tablename, const std::vector<std::string>& attrs, const RawLimits& limit);
+
+    bool checklimits(const SchemaPtr& schema, const Limits& limit);
 };
 
 using APIPtr = std::shared_ptr<API>;

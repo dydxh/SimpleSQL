@@ -33,6 +33,7 @@ public:
     ~Schema() {}
     bool checkConstraint(const Limits& limit);
     int getidx(const std::string& name);
+    Limits translimits(const RawLimits& rawlimits);
 };
 
 using SchemaPtr = std::shared_ptr<Schema>;

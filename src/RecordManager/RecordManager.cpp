@@ -62,19 +62,6 @@ void RecordManager::inserter(const Record& record) {
     BlockPtr tmpblk = buffer->getblock(MakeID(file, pos.first));
     tmpblk->setoffset(pos.second);
 
-    if(record.size() != schema->attrs.size())
-        throw TypeError("[Error] Column number error. Except " + std::to_string(record.size()) + " got " + std::to_string(schema->attrs.size()) + ".");
-    for(int i = 0; i < record.size(); i++) {
-        if(record[i].type != schema->attrs[i]->vtype) {
-            std::string msg = "[Error] Insert " + std::to_string(i) + "th data type mismatch. Except " + tostr(schema->attrs[i]->vtype) + " got " + tostr(record[i].type);
-            throw TypeError(msg);
-        }
-        if(record[i].type == Type::CHAR && record[i].clen > schema->attrs[i]->clen) {
-            std::string msg = "[Error] The " + std::to_string(i) + "th data is too long.";
-            throw TypeError(msg);
-        }
-    }
-
     int recordsize = sizeof(unsigned long long);
     tmpblk->write(&header.recordstart, sizeof(unsigned long long));
     for(int i = 0; i < record.size(); i++) {

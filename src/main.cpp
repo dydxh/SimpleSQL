@@ -53,11 +53,11 @@ int main() {
         api->inserter("table_name", cons(3, "just a test", 4555, 4.567));
         api->inserter("table_name", cons(4, "another testow", 5666, 5.678));
 
-        Limits limit;
-        Constraint ccc;
+        RawLimits limit;
+        RawConstraint ccc;
         Value vvv;
-        vvv.type = Type::INT; vvv.ptr = new int(4000);
-        ccc.attridx = 2; ccc.op = Operator::LEQ; ccc.val = vvv;
+        vvv.type = Type::FLOAT; vvv.ptr = new float(4.000);
+        ccc.name = "weight"; ccc.op = Operator::LEQ; ccc.val = vvv;
         limit.push_back(ccc);
 
         std::vector<std::string> tmper;
