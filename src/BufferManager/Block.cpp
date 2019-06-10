@@ -1,13 +1,19 @@
 #include "Block.hpp"
 #include "../utils/ErrorManager.hpp"
 
+BlockID MakeID(FilePtr file, const int blockid) {
+    return std::make_pair(file, blockid);
+}
+
 Block::Block(const BlockID& bid) {
     file = bid.first;
     blocknum = bid.second;
     free = true;
     dirty = pinned = false;
     offset = 0;
-    fread(buffer, BLOCK_SIZE, 1, file->handler());
+    FILE* fp = file->handler();
+    fseek(fp, blocknum * BLOCK_SIZE, SEEK_SET);
+    fread(buffer, BLOCK_SIZE, 1, fp);
 }
 
 void Block::read(void* dst, unsigned int size) {

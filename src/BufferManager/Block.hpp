@@ -11,9 +11,7 @@
 
 using BlockID = std::pair<FilePtr, int>;
 
-BlockID MakeID(FilePtr file, const int blockid) {
-    return std::make_pair(file, blockid);
-}
+extern BlockID MakeID(FilePtr file, const int blockid);
 
 class Block {
 public:
