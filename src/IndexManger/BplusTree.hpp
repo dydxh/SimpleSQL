@@ -5,15 +5,16 @@
 #ifndef MINISQL_B_PLUS_TREE_H
 #define MINISQL_B_PLUS_TREE_H
 
-#include "../utils/config.hpp"
-#include "../FileManager/FileManager.hpp"
+#include <functional>
 #include "../BufferManager/BufferManager.hpp"
+#include "../RecordManager/RecordManager.hpp"
+#include "../FileManager/FileManager.hpp"
 #include "../BufferManager/Block.hpp"
+#include "../utils/config.hpp"
 #include "../Type/Value.hpp"
 
-// TODO: Implement GETVAL form record manager
-// TODO: GETVAL is equivalent to <read from the record file with the given record offset>
-#define GETVAL(x) x
+
+#define GETVAL(x) recordManager->getVal(columnName.c_str(), x)
 
 #define NEXT_NODE(x) x->foffset[NODE_SIZE]
 #define READ_NODE_BUF(x, y) x->setoffset(0); x->read(y, NODE_SIZE)
@@ -27,25 +28,26 @@ const int NODE_DELETED = 2;
 struct BasicNode {
     short isLeaf;
     short size;
-    long long roffset[NODE_SIZE]; // record offset
-    long long foffset[NODE_SIZE + 1]; // index file offset
+    long long roffset[NODE_SIZE]; // record value offset
+    long long foffset[NODE_SIZE + 1]; // index file offset || record offset
 };
 
 // File manager returns blocknum
 class BplusTree {
     using NodePT = struct BasicNode *;
-    BlockPtr root = 0;
+    using BpRangeConsumer = std::function<void(int, long long)>;// consume a count and the file offset
 
     std::vector<BlockPtr> stack;
     std::vector<int> stackPos;
     int now = -1; // TODO: what happened to now?
     // External dependencies
-    // RecordPtr recordManager; // contains a bufferManager to the record file
+    BlockPtr root = 0;
     FilePtr fileManager; // for the index file
     BufferPtr bufferManager;
-
+    RecordPtr recordManager;
+    std::string columnName;
 public:
-    // TODO: Constructor
+    BplusTree(const FilePtr &indexfile, const BufferPtr &buffer, const RecordPtr &record, const BlockPtr root, const std::string columnName);
     BlockPtr createNode() {
         int blockId = fileManager->allocblock();
         return bufferManager->getblock(MakeID(fileManager, blockId));
@@ -68,6 +70,5 @@ public:
     void insertInto(long long roffset, BlockPtr nextBlock);
 };
 
-using BpRangeConsumer = std::function<void(int, long long)>; // consume a count and the file offset
-
+using BplusPtr = std::shared_ptr<BplusTree>;
 #endif // MINISQL_B_PLUS_TREE_H

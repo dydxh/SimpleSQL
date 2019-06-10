@@ -8,11 +8,10 @@ using FilePos = std::pair<int, int>;
 auto CalcFilePos = [](const unsigned long long& pos) {return std::make_pair(pos / BLOCK_SIZE, pos % BLOCK_SIZE);};
 
 IndexManager::IndexManager(const BufferPtr &recordBuffer, const SchemaPtr &schema, const std::string colName) {
-    
-    this->recordBuffer = recordBuffer;
+    this->buffer = buffer;
     this->columnName = colName;
-    this->tableName = tableName;
     this->schema = schema;
+    this->recordManager = std::shared_ptr(RecordManager::recordbuf[schema->header.name]);
 
     std::string filename = std::string(FILENAME_PREFIX) + "index-" + colName + "-" + std::string(schema->header.name);
 
@@ -30,11 +29,25 @@ IndexManager::IndexManager(const BufferPtr &recordBuffer, const SchemaPtr &schem
             FileManager::filebuf[filename] = indexFile;
         }
     }
-    
+    this->bplusTree = std::make_shared<BplusTree>(indexFile, buffer, recordManager, 
+    buffer->getblock(MakeID(indexFile, indexFile->allocblock)), columnName);
     
 }
 
-Value IndexManager::getVal(long long roffset) {
-    FilePos pos = CalcFilePos(roffset);
-    BlockPtr tempblk = recordBuffer->getblock(MakeID(recordFile, pos.first));
+
+
+void IndexManager::buildIndex() {
+    BlockPtr tmpblk;
+    unsigned long long ptr = recordManager->header.recordstart; // equal to foffset
+    while(ptr) {
+        FilePos pos = CalcFilePos(ptr);
+        tmpblk = buffer->getblock(MakeID(recordFile, pos.first));
+        tmpblk->setoffset(pos.second);
+        tmpblk->read(&ptr, sizeof(unsigned long long));
+        if(ptr & DELETE_TAG) {
+            ptr &= DELETE_MASK;
+            continue; // skip a delete record
+        }
+        bplusTree->insert(ptr + schema->name2offset[std::string(columnName)], ptr);
+    }
 }

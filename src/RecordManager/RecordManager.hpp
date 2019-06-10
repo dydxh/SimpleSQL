@@ -20,7 +20,7 @@ struct RecordFileHeader {
 
 class RecordManager {
 public:
-    static std::map<std::string, std::weak_ptr<RecordManager>> recordbuf;
+    static std::map<std::string, std::weak_ptr<RecordManager>> recordbuf; // schema name
     RecordFileHeader header;
     FilePtr file;
     BufferPtr buffer;
@@ -35,6 +35,7 @@ public:
     std::vector<Record> selecter(const Limits& limit);
     void readheader();
     void* getval(AttrPtr attr, unsigned long long offset);
+    Value getVal(const char * columnName, unsigned long long roffset);
     
 };
 

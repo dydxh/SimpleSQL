@@ -11,22 +11,24 @@
 #include "../RecordManager/RecordManager.hpp"
 #include "../CatalogManager/Schema.hpp"
 #include "../Type/Value.hpp"
+#include "./BplusTree.hpp"
 
 class IndexManager{
-public:
-    
-    IndexManager(const BufferPtr &recordBuffer, const SchemaPtr &schema, const std::string colName);
-    ~IndexManager();
-
-    BufferPtr recordBuffer;
+    RecordPtr recordManager;
+    BufferPtr buffer;
     FilePtr recordFile;
     SchemaPtr schema;
     std::string columnName;
     std::string tableName;
-
     FilePtr indexFile; // the created index file
-private:
-    Value getVal(long long roffset);
-}
+
+    BplusPtr bplusTree;
+public:
+    IndexManager(const BufferPtr &buffer, const SchemaPtr &schema, const std::string colName);
+    // ~IndexManager();
+    void buildIndex();
+};
+
+using IndexPtr = std::shared_ptr<IndexManager>;
 
 #endif //MINISQL_INDEXMANAGER_H

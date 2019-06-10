@@ -6,6 +6,7 @@
 #include "CatalogManager/CatalogManager.hpp"
 #include "RecordManager/RecordManager.hpp"
 #include "utils/ErrorManager.hpp"
+#include "IndexManger/IndexManager.hpp"
 
 void adder(RecordPtr recordmanager, int a, const char* b, int c, float d) {
     Record tmpr;
@@ -87,11 +88,15 @@ int main() {
             }
             std::cout << std::endl;
         }
-        recordmanager->deleteall();
-    }
-    catch(BasicError &e) {
+        //recordmanager->deleteall();
+
+        // test the b+ tree
+        // IndexPtr index = std::make_shared<IndexManager>(buffermanager, catalogmanager->schemas["table_name"], "id");
+        // index->buildIndex();
+    } catch (BasicError &e) {
         std::cout << "Error occur" << std::endl;
         std::cout << e.msg << std::endl;
     }
+
     return 0;
 }

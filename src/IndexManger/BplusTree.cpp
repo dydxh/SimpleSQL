@@ -2,13 +2,28 @@
 // Created by Henry Little on 2019-06-08.
 //
 #include "BplusTree.hpp"
-#include "../Type/Value.hpp"
+
+
+BplusTree::BplusTree(const FilePtr &indexfile, const BufferPtr &buffer, const RecordPtr &record, const BlockPtr root, const std::string columnName) {
+    this->fileManager = indexfile;
+    this->bufferManager = bufferManager;
+    this->recordManager = record;
+    this->root = root;
+    this->columnName = columnName;
+    // Initialize root node
+    NodePT nodeBuffer = new BasicNode;
+    READ_NODE_BUF(root, nodeBuffer);
+    NEXT_NODE(nodeBuffer) = 0;
+    nodeBuffer->isLeaf = true;
+    nodeBuffer->size = 0;
+    WRITE_BACK_NODE_BUF(root, nodeBuffer);
+}
 
 BlockPtr BplusTree::findNode(Value v) {
     stack.clear();
     stackPos.clear();
     // read all the value to a temp
-    NodePT nodeBuffer;
+    NodePT nodeBuffer = new BasicNode;
     BlockPtr blk = root;
     blk->setoffset(0);
     blk->read(nodeBuffer, NODE_SIZE);
@@ -22,7 +37,7 @@ BlockPtr BplusTree::findNode(Value v) {
             continue;
         }
         for (int i; i < nodeBuffer->size; i++) {
-            if (Value::valcmp(GETVAL(nodeBuffer->roffset[i].i), v) > 0) {
+            if (Value::valcmp(GETVAL(nodeBuffer->roffset[i]), v) > 0) {
                 // val > v
                 stackPos.push_back(i);
                 blk = bufferManager->getblock(MakeID(fileManager, nodeBuffer->foffset[i]));
@@ -37,7 +52,7 @@ BlockPtr BplusTree::findNode(Value v) {
 
 long long BplusTree::findOne(Value v) {
     BlockPtr blk = findNode(v);
-    NodePT nodeBuffer;
+    NodePT nodeBuffer = new BasicNode;
     blk->setoffset(0);
     blk->read(nodeBuffer, NODE_SIZE);
     for (int i = 0; i < nodeBuffer->size; i++) {
@@ -50,7 +65,7 @@ long long BplusTree::findOne(Value v) {
 
 BlockPtr BplusTree::findLeftMostNode() {
     BlockPtr blk = root;
-    NodePT nodeBuffer;
+    NodePT nodeBuffer = new BasicNode;
     READ_NODE_BUF(blk, nodeBuffer);
     while (!nodeBuffer->isLeaf) {
         blk = GET_IDX_BLOCK(nodeBuffer->foffset[0]);
@@ -66,7 +81,7 @@ int BplusTree::findByRange(
 ) {
     int count = 0;
     BlockPtr blk;
-    NodePT nodeBuffer;
+    NodePT nodeBuffer = new BasicNode;
     int now = 0;
     if (wl) {
         blk = findNode(l);
@@ -105,7 +120,7 @@ int BplusTree::findByRange(
 bool BplusTree::insert(long long roffset, long long foffset) {
     Value v = GETVAL(roffset);
     BlockPtr blk = findNode(v);
-    NodePT nodeBuffer;
+    NodePT nodeBuffer = new BasicNode;
     READ_NODE_BUF(blk, nodeBuffer);
     if (nodeBuffer->size < NODE_SIZE) {
         // the node is not full, just insert
@@ -138,7 +153,7 @@ bool BplusTree::insert(long long roffset, long long foffset) {
         // split the node into [HALF_NODE_SIZE, HALF_NODE_SIZE]
         // then do a recursive insertion
         BlockPtr nblk = createNode();
-        NodePT nNodeBuffer;
+        NodePT nNodeBuffer = new BasicNode;
         READ_NODE_BUF(nblk, nNodeBuffer);
         NEXT_NODE(nNodeBuffer) = NEXT_NODE(nodeBuffer);
         NEXT_NODE(nodeBuffer) = blk->blocknumber();
@@ -202,7 +217,8 @@ bool BplusTree::insert(long long roffset, long long foffset) {
 void BplusTree::insertInto(long long roffset, BlockPtr nenodeBuffertBlock) {
     if (now == -1) { // root
         BlockPtr blk = createNode();
-        NodePT nodeBuffer, rootNode;
+        NodePT nodeBuffer = new BasicNode;
+        NodePT rootNode = new BasicNode;
         READ_NODE_BUF(stack[0], nodeBuffer);
         blk->setdirty(true);
 
@@ -217,7 +233,7 @@ void BplusTree::insertInto(long long roffset, BlockPtr nenodeBuffertBlock) {
         WRITE_BACK_NODE_BUF(root, rootNode);
     } else {
         BlockPtr blk = stack[now];
-        NodePT nodeBuffer;
+        NodePT nodeBuffer = new BasicNode;
         READ_NODE_BUF(blk, nodeBuffer);
         int pos = stackPos[now];
         // insert at (rofst[i], fofst[i + 1]) (i = pos)
@@ -238,7 +254,7 @@ void BplusTree::insertInto(long long roffset, BlockPtr nenodeBuffertBlock) {
              * indenodeBuffer value, so the result size is (HALF, HALF - 1)
              */
             BlockPtr nblk = createNode();
-            NodePT nNodeBuffer;
+            NodePT nNodeBuffer = new BasicNode;
             long long parentValue;
             READ_NODE_BUF(nblk, nNodeBuffer);
             nNodeBuffer->isLeaf = false;
@@ -298,7 +314,7 @@ void BplusTree::insertInto(long long roffset, BlockPtr nenodeBuffertBlock) {
 
 bool BplusTree::remove(Value v) {
     BlockPtr blk = findNode(v);
-    NodePT nodeBuffer;
+    NodePT nodeBuffer = new BasicNode;
     READ_NODE_BUF(blk, nodeBuffer);
     int pos;
     for (pos = 0; pos < nodeBuffer->size; pos++) {
@@ -314,7 +330,7 @@ bool BplusTree::remove(Value v) {
     WRITE_BACK_NODE_BUF(blk, nodeBuffer);
     if (blk->blocknumber() == root->blocknumber()) return true;
     BlockPtr pblk = stack[now];
-    NodePT parentNode;
+    NodePT parentNode = new BasicNode;
     READ_NODE_BUF(pblk, parentNode);
     int parentPos = stackPos[now];
 
@@ -328,7 +344,7 @@ bool BplusTree::remove(Value v) {
 
     if (parentPos != 0) {
         BlockPtr sibblk = GET_IDX_BLOCK(parentNode->foffset[parentNode->size - 1]);
-        NodePT sibNode;
+        NodePT sibNode = new BasicNode;
         READ_NODE_BUF(sibblk, sibNode);
         if (sibNode->size > NODE_SIZE_HALF) { // borrow
             for (int i = nodeBuffer->size; i >= 1; i--) {
@@ -353,7 +369,7 @@ bool BplusTree::remove(Value v) {
         WRITE_BACK_NODE_BUF(sibblk, sibNode);
     } else {
         BlockPtr sibblk = GET_IDX_BLOCK(parentNode->foffset[parentNode->size - 1]);
-        NodePT sibNode;
+        NodePT sibNode = new BasicNode;
         READ_NODE_BUF(sibblk, sibNode);
         if (sibNode->size > NODE_SIZE_HALF) { // borrow
             nodeBuffer->roffset[nodeBuffer->size] = sibNode->roffset[0];
@@ -382,7 +398,7 @@ bool BplusTree::remove(Value v) {
 
 void BplusTree::removeForm() {
     BlockPtr blk = stack[now];
-    NodePT nodeBuffer;
+    NodePT nodeBuffer = new BasicNode;
     READ_NODE_BUF(blk, nodeBuffer);
     int pos = stackPos[now];
     for (int i = pos == 0 ? 0 : pos - 1; i < nodeBuffer->size; i++) {
@@ -392,7 +408,7 @@ void BplusTree::removeForm() {
     WRITE_BACK_NODE_BUF(blk, nodeBuffer);
     nodeBuffer->size--;
     if (now == 0) { // root
-        NodePT rootNode;
+        NodePT rootNode = new BasicNode;
         READ_NODE_BUF(root, rootNode);
         if (!rootNode->isLeaf && rootNode->size == 0) {
             root->setfree(true);
@@ -400,13 +416,13 @@ void BplusTree::removeForm() {
         }
     } else {
         BlockPtr pblk = stack[now - 1];
-        NodePT parentNode;
+        NodePT parentNode = new BasicNode;
         int parentPos = stackPos[now - 1];
         READ_NODE_BUF(pblk, parentNode);
         if (nodeBuffer->size < NODE_SIZE_HALF - 1) {
             if (parentPos != 0) {
                 BlockPtr sibblk = GET_IDX_BLOCK(parentNode->foffset[parentPos - 1]);
-                NodePT sibNode;
+                NodePT sibNode = new BasicNode;
                 READ_NODE_BUF(sibblk, sibNode);
                 if (sibNode->size > NODE_SIZE_HALF) { // borrow
                     for (int i = nodeBuffer->size; i >= 1; i--) {
@@ -434,7 +450,7 @@ void BplusTree::removeForm() {
                 WRITE_BACK_NODE_BUF(sibblk, sibNode);
             } else {
                 BlockPtr sibblk = GET_IDX_BLOCK(parentNode->foffset[parentPos + 1]);
-                NodePT sibNode;
+                NodePT sibNode = new BasicNode;
                 READ_NODE_BUF(sibblk, sibNode);
                 if (sibNode->size > NODE_SIZE_HALF) { // borrow
                     nodeBuffer->foffset[nodeBuffer->size + 1] = sibNode->foffset[0];
