@@ -32,6 +32,7 @@ public:
     Schema(const FilePtr& fptr, const BufferPtr& bptr) : file(fptr), buffer(bptr) {}
     ~Schema() {}
     bool checkConstraint(const Limits& limit);
+    int getidx(const std::string& name);
 };
 
 using SchemaPtr = std::shared_ptr<Schema>;

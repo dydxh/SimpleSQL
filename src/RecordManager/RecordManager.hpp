@@ -20,11 +20,12 @@ struct RecordFileHeader {
 
 class RecordManager {
 public:
-    static std::map<std::string, std::weak_ptr<RecordManager>> recordbuf;
+    static std::map<std::string, std::shared_ptr<RecordManager>> recordbuf;
     RecordFileHeader header;
     FilePtr file;
     BufferPtr buffer;
     SchemaPtr schema;
+    std::string schemaname;
 
     RecordManager(const BufferPtr& buffer, const CatalogPtr& catalog, const std::string schemaname);
     ~RecordManager();
@@ -33,9 +34,10 @@ public:
     int deleteall();
     int deleter(const Limits& limit);
     std::vector<Record> selecter(const Limits& limit);
+    std::vector<Record> project(const std::vector<Record>& records, const std::vector<int>& idx);
     void readheader();
     void* getval(AttrPtr attr, unsigned long long offset);
-    
+    void droptable();
 };
 
 using RecordPtr = std::shared_ptr<RecordManager>;

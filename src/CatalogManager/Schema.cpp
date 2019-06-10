@@ -7,3 +7,10 @@ bool Schema::checkConstraint(const Limits& limit) {
     }
     return true;
 }
+
+int Schema::getidx(const std::string& name) {
+    for(int i = 0; i < attrs.size(); i++)
+        if(attrs[i]->name == name)
+            return i;
+    return -1;
+}

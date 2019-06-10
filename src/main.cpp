@@ -2,12 +2,14 @@
 #include <iostream>
 #include <cstring>
 #include <string>
+#include <vector>
 #include "BufferManager/BufferManager.hpp"
 #include "CatalogManager/CatalogManager.hpp"
 #include "RecordManager/RecordManager.hpp"
 #include "utils/ErrorManager.hpp"
+#include "API/API.hpp"
 
-void adder(RecordPtr recordmanager, int a, const char* b, int c, float d) {
+Record cons(int a, const char* b, int c, float d) {
     Record tmpr;
     Value tmp;
     tmp.type = Type::INT;
@@ -24,40 +26,47 @@ void adder(RecordPtr recordmanager, int a, const char* b, int c, float d) {
     tmp.type = Type::FLOAT;
     tmp.ptr = new float(d);
     tmpr.push_back(tmp);
-
-    recordmanager->inserter(tmpr);
+    return tmpr;
 }
 
 int main() {
     try {
         BufferPtr buffermanager = std::make_shared<BufferManager>();
         CatalogPtr catalogmanager = std::make_shared<CatalogManager>(buffermanager, CATALOG_NAME);
+        APIPtr api = std::make_shared<API>(catalogmanager);
 
         std::vector<AttrPtr> attrs;
         attrs.push_back(std::make_shared<Attribute>("id", (static_cast<int>(Type::INT) << 1) | 1));
         attrs.push_back(std::make_shared<Attribute>("name", (0x10 << 3) | (static_cast<int>(Type::CHAR) << 1)));
         attrs.push_back(std::make_shared<Attribute>("val", static_cast<int>(Type::INT) << 1));
         attrs.push_back(std::make_shared<Attribute>("weight", static_cast<int>(Type::FLOAT) << 1));
-        catalogmanager->createTable("table_name", 0, attrs);
+        api->createTable("table_name", "id", attrs);
+        // catalogmanager->createTable("table_name", 0, attrs);
         // catalogmanager->dropTable("table_name");
         // buffermanager->flush();
         // return 0;
 
-        RecordPtr recordmanager = std::make_shared<RecordManager>(buffermanager, catalogmanager, "table_name");
-        RecordManager::recordbuf["table_name"] = recordmanager;
+        RecordPtr recordmanager = RecordManager::recordbuf["table_name"];
 
-        adder(recordmanager, 1, "dydxh!?", 2333, 2.345);
-        adder(recordmanager, 2, "qaqovoqqqq", 3444, 3.456);
-        adder(recordmanager, 3, "just a test", 4555, 4.567);
-        adder(recordmanager, 4, "another testow", 5666, 5.678);
+        api->inserter("table_name", cons(1, "dydxh!?", 2333, 2.345));
+        api->inserter("table_name", cons(2, "qaqovoqqqq", 3444, 3.456));
+        api->inserter("table_name", cons(3, "just a test", 4555, 4.567));
+        api->inserter("table_name", cons(4, "another testow", 5666, 5.678));
 
         Limits limit;
         Constraint ccc;
         Value vvv;
-        vvv.type = Type::INT; vvv.ptr = new int(3000);
+        vvv.type = Type::INT; vvv.ptr = new int(4000);
         ccc.attridx = 2; ccc.op = Operator::LEQ; ccc.val = vvv;
         limit.push_back(ccc);
-        std::vector<Record> res = recordmanager->selecter(limit);
+
+        std::vector<std::string> tmper;
+        tmper.push_back("id");
+        tmper.push_back("weight");
+        tmper.push_back("val");
+        tmper.push_back("name");
+        std::vector<Record> res = api->selecter("table_name", tmper, limit);
+        
         for(auto& e : res) {
             std::cout << "==> ";
             for(auto& t : e) {
@@ -65,9 +74,11 @@ int main() {
             }
             std::cout << std::endl;
         }
-        recordmanager->deleter(limit);
+
+        api->deleter("table_name", limit);
         std::cout << "After delete" << std::endl;
-        res = recordmanager->selecter(limit);
+        
+        res = api->selecter("table_name", tmper, limit);
         for(auto& e : res) {
             std::cout << "==> ";
             for(auto& t : e) {
@@ -76,10 +87,12 @@ int main() {
             std::cout << std::endl;
         }
         std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
+
         limit.clear();
         ccc.op = Operator::GEQ;
         limit.push_back(ccc);
-        res = recordmanager->selecter(limit);
+
+        res = api->selecter("table_name", tmper, limit);
         for(auto& e : res) {
             std::cout << "==> ";
             for(auto& t : e) {
@@ -87,7 +100,9 @@ int main() {
             }
             std::cout << std::endl;
         }
-        recordmanager->deleteall();
+
+        api->dropTable("table_name");
+        return 0;
     }
     catch(BasicError &e) {
         std::cout << "Error occur" << std::endl;
