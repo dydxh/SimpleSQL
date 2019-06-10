@@ -62,6 +62,11 @@ void CatalogManager::readbody() {
 
             tmpschema->attrs.push_back(tmpptr);
             tmpschema->name2attrs[tmpptr->name] = tmpptr;
+            int offset = tmpptr->size();
+            if(i != 0)
+                offset += tmpschema->idx2offset[i - 1];
+            tmpschema->idx2offset.push_back(offset);
+            tmpschema->name2offset[tmpptr->name] = tmpschema->idx2offset[i];
         }
 
         nextblk = tmpschema->header.nextblk;
@@ -105,6 +110,8 @@ void CatalogManager::createTable(const std::string& schemaname, const int& idx, 
         memcpy(tmpbuf, e->name.c_str(), MAX_NAME_LEN);
         tmpblk->write(tmpbuf, MAX_NAME_LEN);
     }
+    schemas[schemaname] = tmpschema;
+    name2offset[schemaname] = this->header.schemablk;
 }
 
 void CatalogManager::dropTable(const std::string& schemaname) {

@@ -9,7 +9,7 @@ set(CMAKE_BUILD_TYPE Debug)
 include_directories(${CMAKE_SOURCE_DIR}/src/ ${CMAKE_BINARY_DIR})
 
 file(GLOB SOURCE_FILES
-        "src/*.cpp"
+        "src/main.cpp"
         "src/*.hpp"
         "src/CatalogManager/*.hpp"
         "src/CatalogManager/*.cpp"

@@ -58,6 +58,7 @@ public:
         }
         return 0;
     }
+    
 };
 
 class IntValue : public Value {

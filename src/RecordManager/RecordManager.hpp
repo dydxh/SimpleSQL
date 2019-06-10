@@ -20,6 +20,7 @@ struct RecordFileHeader {
 
 class RecordManager {
 public:
+    static std::map<std::string, std::weak_ptr<RecordManager>> recordbuf;
     RecordFileHeader header;
     FilePtr file;
     BufferPtr buffer;
@@ -33,6 +34,7 @@ public:
     int deleter(const Limits& limit);
     std::vector<Record> selecter(const Limits& limit);
     void readheader();
+    void* getval(AttrPtr attr, unsigned long long offset);
     
 };
 
