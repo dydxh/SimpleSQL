@@ -31,6 +31,17 @@ public:
         retval = (clen << 3) | (static_cast<int>(vtype) << 1) | unique;
         return retval;
     }
+    inline int size() {
+        switch(vtype) {
+            case Type::INT :
+                return sizeof(int);
+            case Type::FLOAT :
+                return sizeof(float);
+            case Type::CHAR :
+                return clen;
+        }
+        return -1;
+    }
 };
 
 using AttrPtr = std::shared_ptr<Attribute>;
