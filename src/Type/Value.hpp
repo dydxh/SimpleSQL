@@ -25,32 +25,35 @@ public:
     void *ptr;
     unsigned char clen;
 
-    virtual int size() {return 0;}
+    virtual int size() { return 0; }
+
     virtual std::string tostr() {
         switch (type) {
-        case Type::INT :
-            return std::to_string(*(int*)ptr);
-        case Type::FLOAT :
-            return std::to_string(*(float*)ptr);
-        case Type::CHAR :
-            return std::string((char*)ptr);
-        default:
-            break;
+            case Type::INT :
+                return std::to_string(*(int *) ptr);
+            case Type::FLOAT :
+                return std::to_string(*(float *) ptr);
+            case Type::CHAR :
+                return std::string((char *) ptr);
+            default:
+                break;
         }
         return "";
     }
 
-    static int valcmp(const Value& lhs, const Value& rhs) {
+    static int valcmp(const Value &lhs, const Value &rhs) {
         if (lhs.type != rhs.type) {
             throw TypeError("[ERROR] Comparing incompatible type");
         } else {
             switch (lhs.type) {
                 case Type::INT:
-                    return *((int *) lhs.ptr) > *((int *) rhs.ptr) ? 1 : (*((int *) lhs.ptr) < *((int *) rhs.ptr) ? -1 : 0);
+                    return *((int *) lhs.ptr) > *((int *) rhs.ptr) ? 1 : (*((int *) lhs.ptr) < *((int *) rhs.ptr) ? -1
+                                                                                                                  : 0);
                 case Type::FLOAT:
-                    return *((float *) lhs.ptr) > *((float *) rhs.ptr) ? 1 : (*((float *) lhs.ptr) < *((float *) rhs.ptr) ? -1 : 0);
+                    return *((float *) lhs.ptr) > *((float *) rhs.ptr) ? 1 : (*((float *) lhs.ptr) <
+                                                                              *((float *) rhs.ptr) ? -1 : 0);
                 case Type::CHAR:
-                    return strcmp((char *)lhs.ptr, (char *)rhs.ptr);
+                    return strcmp((char *) lhs.ptr, (char *) rhs.ptr);
             }
         }
         return 0;
@@ -62,6 +65,7 @@ class IntValue : public Value {
         this->type = Type::INT;
         this->ptr = ptr_;
     }
+
     int size() override {
         return sizeof(int);
     }
@@ -72,6 +76,7 @@ class FloatValue : public Value {
         this->type = Type::FLOAT;
         this->ptr = ptr_;
     }
+
     int size() override {
         return sizeof(float);
     }
@@ -83,6 +88,7 @@ class CharValue : public Value {
         this->ptr = ptr_;
         this->clen = clen_;
     }
+
     int size() override {
         return clen;
     }
