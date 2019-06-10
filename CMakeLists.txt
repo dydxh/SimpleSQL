@@ -21,6 +21,8 @@ file(GLOB SOURCE_FILES
         "src/RecordManager/*.cpp"
         "src/Type/*.hpp"
         "src/Type/*.cpp"
+        "src/API/*.hpp"
+        "src/API/*.cpp"
         "src/utils/*.hpp"
         "src/utils/*.cpp"
         )

@@ -8,12 +8,15 @@ using FilePos = std::pair<int, int>;
 auto CalcFilePos = [](const unsigned long long& pos) {return std::make_pair(pos / BLOCK_SIZE, pos % BLOCK_SIZE);};
 auto ReadRecord = []() {};
 
+std::map<std::string, std::shared_ptr<RecordManager>> RecordManager::recordbuf;
+
 RecordManager::RecordManager(const BufferPtr& buffer, const CatalogPtr& catalog, std::string schemaname) {
     if(catalog->schema_exist(schemaname) == false) {
         throw SchemaError("[Error] Schema " + schemaname + " doesn't exist." );
     }
     this->schema = catalog->schemas[schemaname];
     this->buffer = buffer;
+    this->schemaname = schemaname;
     std::string filename = FILENAME_PREFIX + schemaname + "-" + CATALOG_NAME;
 
     if(FileManager::filexist(filename.c_str()) == false) {
@@ -40,7 +43,12 @@ RecordManager::RecordManager(const BufferPtr& buffer, const CatalogPtr& catalog,
 }
 
 RecordManager::~RecordManager() {
+    
+}
 
+void RecordManager::droptable() {
+    file->setdelete();
+    RecordManager::recordbuf.erase(schemaname);
 }
 
 void RecordManager::readheader() {
@@ -194,4 +202,14 @@ Value RecordManager::getVal(const char * columnName, unsigned long long roffset)
         val.clen = schema->name2attrs[std::string(columnName)]->clen;
     }
     return val;
+}
+std::vector<Record> RecordManager::project(const std::vector<Record>& records, const std::vector<int>& idx) {
+    std::vector<Record> retval;
+    for(auto& record : records) {
+        Record val;
+        for(auto& pos : idx) 
+            val.push_back(record[pos]);
+        retval.push_back(val);
+    }
+    return retval;
 }

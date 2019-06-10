@@ -44,4 +44,9 @@ public:
     SchemaError(const std::string& msg) : BasicError(msg) {}
 };
 
+class AttributeError : public BasicError {
+public:
+    AttributeError(const std::string& msg) : BasicError(msg) {}
+};
+
 #endif

@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstring>
 #include <iostream>
+#include <cassert>
 #include <sys/stat.h>
 #include "FileManager.hpp"
 #include "../utils/ErrorManager.hpp"
@@ -13,20 +14,26 @@ std::map<std::string, std::weak_ptr<FileManager>> FileManager::filebuf;
 FileManager::FileManager() {
     file = nullptr;
     blockcnt = fidx = 0;
+    todelete = false;
 }
 
 FileManager::FileManager(const char* filename) {
+    this->filename = std::string(filename);
     file = fopen(filename, "rb+");
     if(file == nullptr)
-        throw OpenFileError("Fail to open file " + std::string(filename));
+        throw OpenFileError("Fail to open file " + this->filename);
     fseek(file, 0, SEEK_END);
     blockcnt = ftell(file) / BLOCK_SIZE;
     fidx = file_counter++;
+    todelete = false;
 }
 
 FileManager::~FileManager() {
-    if(file != nullptr)
+    if(file != nullptr) {
         fclose(file);
+        if(todelete)
+            assert(!remove(this->filename.c_str()));
+    }
     blockcnt = fidx = 0;
 }
 

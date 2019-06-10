@@ -14,6 +14,8 @@ class FileManager {
     FILE* file;
     int fidx;
     unsigned int blockcnt;
+    std::string filename;
+    bool todelete;
 public:
     static std::map<std::string, std::weak_ptr<FileManager>> filebuf;
     FileManager();
@@ -28,6 +30,10 @@ public:
     inline FILE* handler() {return file;}
     inline int blockcount() {return blockcnt;}
     inline int fileidx() {return fidx;}
+    inline void setdelete() {
+        FileManager::filebuf.erase(filename);
+        todelete = true;
+    }
 
     int allocblock();
     void readblock(int blockid, void* buffer);

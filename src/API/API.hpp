@@ -25,4 +25,6 @@ public:
     std::vector<Record> selecter(const std::string& tablename, const std::vector<std::string>& attrs, const Limits& limit);
 };
 
+using APIPtr = std::shared_ptr<API>;
+
 #endif
