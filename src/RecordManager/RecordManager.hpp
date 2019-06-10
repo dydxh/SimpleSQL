@@ -37,6 +37,8 @@ public:
     std::vector<Record> project(const std::vector<Record>& records, const std::vector<int>& idx);
     void readheader();
     void* getval(AttrPtr attr, unsigned long long offset);
+    Value getVal(const char * columnName, unsigned long long roffset);
+    
     void droptable();
 };
 

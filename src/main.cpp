@@ -7,6 +7,7 @@
 #include "CatalogManager/CatalogManager.hpp"
 #include "RecordManager/RecordManager.hpp"
 #include "utils/ErrorManager.hpp"
+#include "IndexManger/IndexManager.hpp"
 #include "API/API.hpp"
 
 Record cons(int a, const char* b, int c, float d) {
@@ -100,13 +101,16 @@ int main() {
             }
             std::cout << std::endl;
         }
+        //recordmanager->deleteall();
 
-        api->dropTable("table_name");
-        return 0;
-    }
+        // test the b+ tree
+        // IndexPtr index = std::make_shared<IndexManager>(buffermanager, catalogmanager->schemas["table_name"], "id");
+        // index->buildIndex();
+    } 
     catch(BasicError &e) {
         std::cout << "Error occur" << std::endl;
         std::cout << e.msg << std::endl;
     }
+
     return 0;
 }

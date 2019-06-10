@@ -175,6 +175,21 @@ selecter(const Limits& limit) {
     return retval;
 }
 
+Value RecordManager::getVal(const char * columnName, unsigned long long roffset) {
+    FilePos pos = CalcFilePos(roffset);
+    BlockPtr tempblk = buffer->getblock(MakeID(file, pos.first));
+    int size = schema->name2attrs[std::string(columnName)]->size();
+    void * ptr = malloc(size);
+    tempblk->setoffset(pos.second);
+    tempblk->read(&ptr, size);
+    Value val;
+    val.type = schema->name2attrs[std::string(columnName)]->vtype;
+    val.ptr = ptr;
+    if (val.type == Type::CHAR) {
+        val.clen = schema->name2attrs[std::string(columnName)]->clen;
+    }
+    return val;
+}
 std::vector<Record> RecordManager::project(const std::vector<Record>& records, const std::vector<int>& idx) {
     std::vector<Record> retval;
     for(auto& record : records) {
