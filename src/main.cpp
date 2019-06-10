@@ -42,12 +42,6 @@ int main() {
         attrs.push_back(std::make_shared<Attribute>("val", static_cast<int>(Type::INT) << 1));
         attrs.push_back(std::make_shared<Attribute>("weight", static_cast<int>(Type::FLOAT) << 1));
         api->createTable("table_name", "id", attrs);
-        // catalogmanager->createTable("table_name", 0, attrs);
-        // catalogmanager->dropTable("table_name");
-        // buffermanager->flush();
-        // return 0;
-
-        RecordPtr recordmanager = RecordManager::recordbuf["table_name"];
 
         api->inserter("table_name", cons(1, "dydxh!?", 2333, 2.345));
         api->inserter("table_name", cons(2, "qaqovoqqqq", 3444, 3.456));
@@ -75,7 +69,7 @@ int main() {
             }
             std::cout << std::endl;
         }
-
+        // return 0;
         api->deleter("table_name", limit);
         std::cout << "After delete" << std::endl;
         

@@ -32,7 +32,14 @@ void API::dropTable(const std::string& schemaname) {
 }
 
 void API::inserter(const std::string& schemaname, const Record& record) {
-    SchemaPtr schema = RecordManager::recordbuf[schemaname]->schema;
+    SchemaPtr schema;
+    if(RecordManager::recordexist(schemaname))
+        schema = RecordManager::recordbuf[schemaname]->schema;
+    else {
+        RecordPtr recordmanager = std::make_shared<RecordManager>(catalog->buffer, catalog, schemaname);
+        RecordManager::recordbuf[schemaname] = recordmanager;
+        schema = recordmanager->schema;
+    }
 
     if(record.size() != schema->attrs.size())
         throw TypeError("[Error] Column number error, except " + std::to_string(record.size()) + " got " + std::to_string(schema->attrs.size()) + ".");
@@ -51,7 +58,15 @@ void API::inserter(const std::string& schemaname, const Record& record) {
 }
 
 int API::deleter(const std::string& schemaname, const RawLimits& rawlimits) {
-    SchemaPtr schema = RecordManager::recordbuf[schemaname]->schema;
+    SchemaPtr schema;
+    if(RecordManager::recordexist(schemaname))
+        schema = RecordManager::recordbuf[schemaname]->schema;
+    else {
+        RecordPtr recordmanager = std::make_shared<RecordManager>(catalog->buffer, catalog, schemaname);
+        RecordManager::recordbuf[schemaname] = recordmanager;
+        schema = recordmanager->schema;
+    }
+    
     Limits limit = schema->translimits(rawlimits);
     checklimits(schema, limit);
 
@@ -64,7 +79,15 @@ int API::deleter(const std::string& schemaname, const RawLimits& rawlimits) {
 }
 
 std::vector<Record> API::selecter(const std::string& schemaname, const std::vector<std::string>& attrs, const RawLimits& rawlimits) {
-    SchemaPtr schema = RecordManager::recordbuf[schemaname]->schema;
+    SchemaPtr schema;
+    if(RecordManager::recordexist(schemaname))
+        schema = RecordManager::recordbuf[schemaname]->schema;
+    else {
+        RecordPtr recordmanager = std::make_shared<RecordManager>(catalog->buffer, catalog, schemaname);
+        RecordManager::recordbuf[schemaname] = recordmanager;
+        schema = recordmanager->schema;
+    }
+    
     Limits limit = schema->translimits(rawlimits);
     checklimits(schema, limit);
     

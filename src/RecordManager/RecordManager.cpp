@@ -46,6 +46,12 @@ RecordManager::~RecordManager() {
     
 }
 
+bool RecordManager::recordexist(const std::string& schemaname) {
+    if(recordbuf.find(schemaname) != recordbuf.end())
+        return true;
+    return false;
+}
+
 void RecordManager::droptable() {
     file->setdelete();
     RecordManager::recordbuf.erase(schemaname);

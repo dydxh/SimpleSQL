@@ -30,6 +30,8 @@ public:
     RecordManager(const BufferPtr& buffer, const CatalogPtr& catalog, const std::string schemaname);
     ~RecordManager();
 
+    static bool recordexist(const std::string& schemaname);
+
     void inserter(const Record& record);
     int deleteall();
     int deleter(const Limits& limit);
