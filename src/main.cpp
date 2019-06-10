@@ -44,6 +44,7 @@ int main() {
         // return 0;
 
         RecordPtr recordmanager = std::make_shared<RecordManager>(buffermanager, catalogmanager, "table_name");
+        RecordManager::recordbuf["table_name"] = recordmanager;
 
         adder(recordmanager, 1, "dydxh!?", 2333, 2.345);
         adder(recordmanager, 2, "qaqovoqqqq", 3444, 3.456);

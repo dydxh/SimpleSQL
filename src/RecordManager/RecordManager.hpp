@@ -20,6 +20,7 @@ struct RecordFileHeader {
 
 class RecordManager {
 public:
+    static std::map<std::string, std::weak_ptr<RecordManager>> recordbuf;
     RecordFileHeader header;
     FilePtr file;
     BufferPtr buffer;

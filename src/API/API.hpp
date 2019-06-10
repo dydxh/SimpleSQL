@@ -9,15 +9,20 @@
 
 class API {
 public:
-    static void createTable(const std::string& tablename, const std::string& primarykey, const std::vector<AttrPtr>& attrs);
+    CatalogPtr catalog;
 
-    static void dropTable(const std::string& tablename);
+    API(const CatalogPtr& catalog);
+    ~API();
 
-    static void inserter(const std::string& tablename, const Record& record);
+    void createTable(const std::string& tablename, const std::string& primarykey, const std::vector<AttrPtr>& attrs);
 
-    static int deleter(const std::string& tablename, const Limits& limit);
+    void dropTable(const std::string& tablename);
 
-    static std::vector<Record> selecter(const std::string& tablename, const std::vector<std::string>& attrs, const Limits& limit);
+    void inserter(const std::string& tablename, const Record& record);
+
+    int deleter(const std::string& tablename, const Limits& limit);
+
+    std::vector<Record> selecter(const std::string& tablename, const std::vector<std::string>& attrs, const Limits& limit);
 };
 
 #endif
