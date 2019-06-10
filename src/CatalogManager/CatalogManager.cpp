@@ -110,6 +110,8 @@ void CatalogManager::createTable(const std::string& schemaname, const int& idx, 
         memcpy(tmpbuf, e->name.c_str(), MAX_NAME_LEN);
         tmpblk->write(tmpbuf, MAX_NAME_LEN);
     }
+    schemas[schemaname] = tmpschema;
+    name2offset[schemaname] = this->header.schemablk;
 }
 
 void CatalogManager::dropTable(const std::string& schemaname) {
