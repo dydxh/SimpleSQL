@@ -13,20 +13,29 @@
 #include "../Type/Value.hpp"
 #include "./BplusTree.hpp"
 
-class IndexManager{
+class IndexManager {
     RecordPtr recordManager;
     BufferPtr buffer;
-    FilePtr recordFile;
     SchemaPtr schema;
     std::string columnName;
-    std::string tableName;
     FilePtr indexFile; // the created index file
 
     BplusPtr bplusTree;
 public:
-    IndexManager(const BufferPtr &buffer, const SchemaPtr &schema, const std::string colName);
+    IndexManager(const BufferPtr &buffer, const SchemaPtr &schema, std::string colName);
+
     // ~IndexManager();
     void buildIndex();
+
+    unsigned long long findOne(Value &v);
+
+    std::vector<unsigned long long> findByRange(
+            bool wl, bool leq, const Value &l,
+            bool wr, bool req, const Value &r
+    );
+
+private:
+    void printRecord(unsigned long long ptr);
 };
 
 using IndexPtr = std::shared_ptr<IndexManager>;

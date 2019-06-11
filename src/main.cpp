@@ -10,7 +10,7 @@
 #include "IndexManger/IndexManager.hpp"
 #include "API/API.hpp"
 
-Record cons(int a, const char* b, int c, float d) {
+Record cons(int a, const char *b, int c, float d) {
     Record tmpr;
     Value tmp;
     tmp.type = Type::INT;
@@ -19,7 +19,7 @@ Record cons(int a, const char* b, int c, float d) {
     tmp.type = Type::CHAR;
     tmp.clen = strlen(b) + 1;
     tmp.ptr = new char[tmp.clen];
-    strcpy((char*)tmp.ptr, b);
+    strcpy((char *) tmp.ptr, b);
     tmpr.push_back(tmp);
     tmp.type = Type::INT;
     tmp.ptr = new int(c);
@@ -47,61 +47,81 @@ int main() {
         api->inserter("table_name", cons(2, "qaqovoqqqq", 3444, 3.456));
         api->inserter("table_name", cons(3, "just a test", 4555, 4.567));
         api->inserter("table_name", cons(4, "another testow", 5666, 5.678));
+        api->inserter("table_name", cons(5, "another testow", 5666, 5.678));
+        api->inserter("table_name", cons(6, "another testow", 5666, 5.678));
+        api->inserter("table_name", cons(7, "another testow", 5666, 5.678));
+        api->inserter("table_name", cons(8, "another testow", 5666, 5.678));
+        api->inserter("table_name", cons(9, "another testow", 5666, 5.678));
+        api->inserter("table_name", cons(10, "another testow", 5666, 5.678));
+        api->inserter("table_name", cons(11, "another testow", 5666, 5.678));
+        api->inserter("table_name", cons(12, "another testow", 5666, 5.678));
+        api->inserter("table_name", cons(13, "another testow", 5666, 5.678));
+        api->inserter("table_name", cons(14, "another testow", 5666, 5.678));
+        api->inserter("table_name", cons(15, "another testow", 5666, 5.678));
+        api->inserter("table_name", cons(16, "another testow", 5666, 5.678));
+        api->inserter("table_name", cons(17, "another testow", 5666, 5.678));
+        api->inserter("table_name", cons(18, "another testow", 5666, 5.678));
 
-        RawLimits limit;
-        RawConstraint ccc;
-        Value vvv;
-        vvv.type = Type::FLOAT; vvv.ptr = new float(4.000);
-        ccc.name = "weight"; ccc.op = Operator::LEQ; ccc.val = vvv;
-        limit.push_back(ccc);
-
-        std::vector<std::string> tmper;
-        tmper.push_back("id");
-        tmper.push_back("weight");
-        tmper.push_back("val");
-        tmper.push_back("name");
-        std::vector<Record> res = api->selecter("table_name", tmper, limit);
-        
-        for(auto& e : res) {
-            std::cout << "==> ";
-            for(auto& t : e) {
-                std::cout << t.tostr() << ' ';
-            }
-            std::cout << std::endl;
-        }
-        // return 0;
-        api->deleter("table_name", limit);
-        std::cout << "After delete" << std::endl;
-        
-        res = api->selecter("table_name", tmper, limit);
-        for(auto& e : res) {
-            std::cout << "==> ";
-            for(auto& t : e) {
-                std::cout << t.tostr() << ' ';
-            }
-            std::cout << std::endl;
-        }
-        std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
-
-        limit.clear();
-        ccc.op = Operator::GEQ;
-        limit.push_back(ccc);
-
-        res = api->selecter("table_name", tmper, limit);
-        for(auto& e : res) {
-            std::cout << "==> ";
-            for(auto& t : e) {
-                std::cout << t.tostr() << ' ';
-            }
-            std::cout << std::endl;
-        }
+//        RawLimits limit;
+//        RawConstraint ccc;
+//        Value vvv;
+//        vvv.type = Type::FLOAT; vvv.ptr = new float(4.000);
+//        ccc.name = "weight"; ccc.op = Operator::LEQ; ccc.val = vvv;
+//        limit.push_back(ccc);
+//
+//        std::vector<std::string> tmper;
+//        tmper.push_back("id");
+//        tmper.push_back("weight");
+//        tmper.push_back("val");
+//        tmper.push_back("name");
+//        std::vector<Record> res = api->selecter("table_name", tmper, limit);
+//
+//        for(auto& e : res) {
+//            std::cout << "==> ";
+//            for(auto& t : e) {
+//                std::cout << t.tostr() << ' ';
+//            }
+//            std::cout << std::endl;
+//        }
+//        // return 0;
+//        api->deleter("table_name", limit);
+//        std::cout << "After delete" << std::endl;
+//
+//        res = api->selecter("table_name", tmper, limit);
+//        for(auto& e : res) {
+//            std::cout << "==> ";
+//            for(auto& t : e) {
+//                std::cout << t.tostr() << ' ';
+//            }
+//            std::cout << std::endl;
+//        }
+//        std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
+//
+//        limit.clear();
+//        ccc.op = Operator::GEQ;
+//        limit.push_back(ccc);
+//
+//        res = api->selecter("table_name", tmper, limit);
+//        for(auto& e : res) {
+//            std::cout << "==> ";
+//            for(auto& t : e) {
+//                std::cout << t.tostr() << ' ';
+//            }
+//            std::cout << std::endl;
+//        }
         //recordmanager->deleteall();
 
-        // test the b+ tree
-        // IndexPtr index = std::make_shared<IndexManager>(buffermanager, catalogmanager->schemas["table_name"], "id");
-        // index->buildIndex();
-    } 
-    catch(BasicError &e) {
+//         test the b+ tree
+        IndexPtr index = std::make_shared<IndexManager>(buffermanager, catalogmanager->schemas["table_name"], "id");
+        index->buildIndex();
+        int ii = 10, iii = 15;
+        IntValue v = IntValue(&ii);
+        IntValue vv = IntValue(&iii);
+//         std::cout<<index->findOne(v).tostr()<<std::endl;
+        index->findOne(v);
+        std::vector<unsigned long long> res = index->findByRange(true, true, v, true, true, vv);
+    }
+    catch (BasicError &e) {
         std::cout << "Error occur" << std::endl;
         std::cout << e.msg << std::endl;
     }

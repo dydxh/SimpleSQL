@@ -11,11 +11,13 @@
 class BufferManager {
 public:
     BufferManager();
+
     ~BufferManager();
 
     static void allocBlock(FilePtr file);
 
-    BlockPtr getblock(const BlockID& blockid);
+    BlockPtr getblock(const BlockID &blockid);
+
     void cleancache();
 
     void flush();

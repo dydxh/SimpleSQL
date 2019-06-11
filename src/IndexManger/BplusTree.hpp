@@ -47,7 +47,9 @@ class BplusTree {
     RecordPtr recordManager;
     std::string columnName;
 public:
-    BplusTree(const FilePtr &indexfile, const BufferPtr &buffer, const RecordPtr &record, const BlockPtr root, const std::string columnName);
+    BplusTree(const FilePtr &filePtr, const BufferPtr &buffer, const RecordPtr &record, BlockPtr root,
+              std::string columnName);
+
     BlockPtr createNode() {
         int blockId = fileManager->allocblock();
         return bufferManager->getblock(MakeID(fileManager, blockId));
@@ -56,17 +58,24 @@ public:
     /* query using Value for easy comparison */
     /* ------------------------------------- */
     BlockPtr findLeftMostNode();
-    BlockPtr findNode(Value v);
+
+    BlockPtr findNode(const Value& v);
+
     long long findOne(Value v);
+
     int findByRange(
-            bool wl, bool leq, Value l,
-            bool wr, bool req, Value r,
-            BpRangeConsumer consumer
+            bool wl, bool leq, const Value& l,
+            bool wr, bool req, const Value& r,
+            const BpRangeConsumer& consumer
     );
+
     bool remove(Value v);
+
     void removeForm();
+
     // insert just record the offset to make it easy to maintain
     bool insert(long long roffset, long long foffset);
+
     void insertInto(long long roffset, BlockPtr nextBlock);
 };
 
