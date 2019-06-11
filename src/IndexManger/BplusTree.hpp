@@ -17,25 +17,26 @@
 #define GETVAL(x) recordManager->getVal(columnName.c_str(), x)
 
 #define NEXT_NODE(x) x->foffset[NODE_SIZE]
-#define READ_NODE_BUF(x, y) x->setoffset(0); x->read(y, NODE_SIZE)
-#define WRITE_BACK_NODE_BUF(x, y) x->setoffset(0); x->write(y, NODE_SIZE)
+#define READ_NODE_BUF(x, y) x->setoffset(0); x->read(y, BLOCK_SIZE)
+#define WRITE_BACK_NODE_BUF(x, y) x->setoffset(0); x->write(y, BLOCK_SIZE)
 #define GET_IDX_BLOCK(x) bufferManager->getblock(MakeID(fileManager, x))
 // a index key and a struct to find the record in the table file
 
-const int NODE_SIZE = (BLOCK_SIZE - 2 * sizeof(short) - sizeof(long long)) / (sizeof(long long) + sizeof(long long));
+const int NODE_SIZE = (BLOCK_SIZE - 2 * sizeof(short) - sizeof(unsigned long long)) /
+                      (sizeof(unsigned long long) + sizeof(unsigned long long));
 const int NODE_SIZE_HALF = NODE_SIZE / 2;
 const int NODE_DELETED = 2;
 struct BasicNode {
     short isLeaf;
     short size;
-    long long roffset[NODE_SIZE]; // record value offset
-    long long foffset[NODE_SIZE + 1]; // index file offset || record offset
+    unsigned long long roffset[NODE_SIZE]; // record value offset
+    unsigned long long foffset[NODE_SIZE + 1]; // index file offset || record offset
 };
 
 // File manager returns blocknum
 class BplusTree {
     using NodePT = struct BasicNode *;
-    using BpRangeConsumer = std::function<void(int, long long)>;// consume a count and the file offset
+    using BpRangeConsumer = std::function<void(int, unsigned long long)>;// consume a count and the file offset
 
     std::vector<BlockPtr> stack;
     std::vector<int> stackPos;
@@ -61,7 +62,7 @@ public:
 
     BlockPtr findNode(const Value& v);
 
-    long long findOne(Value v);
+    unsigned long long findOne(Value v);
 
     int findByRange(
             bool wl, bool leq, const Value& l,
@@ -74,9 +75,9 @@ public:
     void removeForm();
 
     // insert just record the offset to make it easy to maintain
-    bool insert(long long roffset, long long foffset);
+    bool insert(unsigned long long roffset, unsigned long long foffset);
 
-    void insertInto(long long roffset, BlockPtr nextBlock);
+    void insertInto(unsigned long long roffset, BlockPtr nextBlock);
 };
 
 using BplusPtr = std::shared_ptr<BplusTree>;

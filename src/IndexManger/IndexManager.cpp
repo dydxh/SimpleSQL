@@ -70,11 +70,11 @@ std::vector<unsigned long long> IndexManager::findByRange(
 ) {
     std::vector<unsigned long long> res;
     bplusTree->findByRange(
-            wl, leq, std::move(l),
-            wr, req, std::move(r),
+            wl, leq, l,
+            wr, req, r,
             [&res,this](int count, unsigned long long ptr) {
                 res.push_back(ptr);
-                std::cout << count << " ";
+                std::cout << count << " >>> ";
                 //TODO:remove
                 printRecord(ptr);
             });

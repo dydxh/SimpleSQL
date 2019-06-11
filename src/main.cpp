@@ -119,7 +119,8 @@ int main() {
         IntValue vv = IntValue(&iii);
 //         std::cout<<index->findOne(v).tostr()<<std::endl;
         index->findOne(v);
-        std::vector<unsigned long long> res = index->findByRange(true, true, v, true, true, vv);
+        std::vector<unsigned long long> res = index->findByRange(true, false, v, true, false, vv);
+
     }
     catch (BasicError &e) {
         std::cout << "Error occur" << std::endl;

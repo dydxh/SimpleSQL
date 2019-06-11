@@ -20,7 +20,7 @@ BplusTree::BplusTree(const FilePtr &filePtr, const BufferPtr &buffer, const Reco
     WRITE_BACK_NODE_BUF(root, nodeBuffer);
 }
 
-BlockPtr BplusTree::findNode(const Value& v) {
+BlockPtr BplusTree::findNode(const Value &v) {
     stack.clear();
     stackPos.clear();
     // read all the value to a temp
@@ -53,9 +53,9 @@ BlockPtr BplusTree::findNode(const Value& v) {
     }
 }
 
-long long BplusTree::findOne(Value v) {
+unsigned long long BplusTree::findOne(Value v) {
     BlockPtr blk = findNode(v);
-    NodePT nodeBuffer = new BasicNode;
+    auto nodeBuffer = new BasicNode;
     blk->setoffset(0);
     blk->read(nodeBuffer, NODE_SIZE);
     for (int i = 0; i < nodeBuffer->size; i++) {
@@ -69,7 +69,7 @@ long long BplusTree::findOne(Value v) {
 
 BlockPtr BplusTree::findLeftMostNode() {
     BlockPtr blk = root;
-    NodePT nodeBuffer = new BasicNode;
+    auto nodeBuffer = new BasicNode;
     READ_NODE_BUF(blk, nodeBuffer);
     while (!nodeBuffer->isLeaf) {
         blk = GET_IDX_BLOCK(nodeBuffer->foffset[0]);
@@ -79,9 +79,9 @@ BlockPtr BplusTree::findLeftMostNode() {
 }
 
 int BplusTree::findByRange(
-        bool wl, bool leq, const Value& l,
-        bool wr, bool req, const Value& r,
-        const BpRangeConsumer& consumer
+        bool wl, bool leq, const Value &l,
+        bool wr, bool req, const Value &r,
+        const BpRangeConsumer &consumer
 ) {
     int count = 0;
     BlockPtr blk;
@@ -121,7 +121,7 @@ int BplusTree::findByRange(
     }
 }
 
-bool BplusTree::insert(long long roffset, long long foffset) {
+bool BplusTree::insert(unsigned long long roffset, unsigned long long foffset) {
     Value v = GETVAL(roffset);
     BlockPtr blk = findNode(v);
     auto nodeBuffer = new BasicNode;
@@ -139,7 +139,7 @@ bool BplusTree::insert(long long roffset, long long foffset) {
                 return true; // insertion complete
             } else if (0 == Value::valcmp(GETVAL(nodeBuffer->roffset[i - 1]), v)) {
                 // TODO: remove
-                std::cout<<"[TEST][WARNING]: duplicate value encountered, ignoring" << std::endl;
+                std::cout << "[TEST][WARNING]: duplicate value encountered, ignoring" << std::endl;
                 return false; // duplicate value
             } else {
                 nodeBuffer->roffset[i] = nodeBuffer->roffset[i - 1];
@@ -220,7 +220,7 @@ bool BplusTree::insert(long long roffset, long long foffset) {
     return true;
 }
 
-void BplusTree::insertInto(long long roffset, BlockPtr nenodeBuffertBlock) {
+void BplusTree::insertInto(unsigned long long roffset, BlockPtr nenodeBuffertBlock) {
     if (now == -1) { // root
         BlockPtr blk = createNode();
         auto nodeBuffer = new BasicNode;
@@ -260,8 +260,8 @@ void BplusTree::insertInto(long long roffset, BlockPtr nenodeBuffertBlock) {
              * indenodeBuffer value, so the result size is (HALF, HALF - 1)
              */
             BlockPtr nblk = createNode();
-            NodePT nNodeBuffer = new BasicNode;
-            long long parentValue;
+            auto nNodeBuffer = new BasicNode;
+            unsigned long long parentValue;
             READ_NODE_BUF(nblk, nNodeBuffer);
             nNodeBuffer->isLeaf = false;
             nodeBuffer->size = NODE_SIZE_HALF;
