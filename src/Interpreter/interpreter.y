@@ -63,7 +63,7 @@ program: sqlstmt_list
     ;
     
 sqlstmt_list: sqlstmt_list sqlstmt SEMICOLON {
-    
+
     }
     | sqlstmt SEMICOLON {
         
@@ -83,6 +83,7 @@ sqlstmt: create_table_stmt
 
 create_table_stmt: CREATE TABLE IDENTIFIER LPAREN attribute_decl_list COMMA PRIMARY KEY LPAREN IDENTIFIER RPAREN RPAREN {
         API::createTable($3, $10, $5);
+        std::cout << "Create table '" << $3 << "' successfully." << std::endl;
     }
     ;
 
@@ -118,26 +119,39 @@ attribute_type: INT {
 
 drop_table_stmt: DROP TABLE IDENTIFIER {
         API::dropTable($3);
+        std::cout << "Drop table '" << $3 << "' successfully." << std::endl;
     }
     ;
 
-create_index_stmt: CREATE INDEX IDENTIFIER ON IDENTIFIER LPAREN IDENTIFIER RPAREN
+create_index_stmt: CREATE INDEX IDENTIFIER ON IDENTIFIER LPAREN IDENTIFIER RPAREN {
+        std::cout << "Create index '" << $3 << "' successfully." << std::endl;
+    }
     ;
 
-drop_index_stmt: DROP INDEX IDENTIFIER
+drop_index_stmt: DROP INDEX IDENTIFIER {
+        std::cout << "Drop index '" << $3 << "' successfully." << std::endl;
+    }
     ;
 
 select_stmt: SELECT attribute_list FROM IDENTIFIER {
-        API::displaymsg($4, API::selecter($4, $2), $2);
+        auto e = API::selecter($4, $2);
+        API::displaymsg($4, e, $2);
+        std::cout << "Select operation complete, got " << e.size() << " row(s) data." << std::endl;
     }
     | SELECT attribute_list FROM IDENTIFIER WHERE constraint_list {
-        API::displaymsg($4, API::selecter($4, $2, $6), $2);
+        auto e = API::selecter($4, $2, $6);
+        API::displaymsg($4, e, $2);
+        std::cout << "Select operation complete, got " << e.size() << " row(s) data." << std::endl;
     }
     | SELECT STAR FROM IDENTIFIER {
-        API::displaymsg($4, API::selecter($4));
+        auto e = API::selecter($4);
+        API::displaymsg($4, e);
+        std::cout << "Select operation complete, got " << e.size() << " row(s) data." << std::endl;
     }
     | SELECT STAR FROM IDENTIFIER WHERE constraint_list {
-        API::displaymsg($4, API::selecter($4, std::vector<std::string>(), $6));
+        auto e = API::selecter($4, std::vector<std::string>(), $6);
+        API::displaymsg($4, e);
+        std::cout << "Select operation complete, got " << e.size() << " row(s) data." << std::endl;
     }
     ;
 
@@ -206,6 +220,7 @@ value: INTEGER {
 
 insert_stmt: INSERT INTO IDENTIFIER VALUES LPAREN value_list RPAREN {
         API::inserter($3, $6);
+        std::cout << "Insert operation complete." << std::endl;
     }
     ;
 
@@ -220,17 +235,25 @@ value_list: value_list COMMA value {
     ;
 
 delete_stmt: DELETE FROM IDENTIFIER {
-        API::deleter($3);
+        int e = API::deleter($3);
+        std::cout << "Delete " << e << " row(s) data." << std::endl;
     }
     | DELETE FROM IDENTIFIER WHERE constraint_list {
-        API::deleter($3, $5);
+        int e = API::deleter($3, $5);
+        std::cout << "Delete " << e << " row(s) data." << std::endl;
     }
     ;
 
-quit_stmt: QUIT
+quit_stmt: QUIT {
+        std::cout << "Bye~" << std::endl;
+        exit(0);
+    }
     ;
 
-execfile_stmt: EXECFILE STRING
+execfile_stmt: EXECFILE STRING {
+        API::execfile($2);
+        std::cout << "File execution complete." << std::endl;
+    }
     ;
 
 %%

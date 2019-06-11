@@ -1,4 +1,5 @@
 #include "API.hpp"
+#include "../Interpreter/Driver.hpp"
 
 // API::API(const CatalogPtr& catalog) {
 //     this->catalog = catalog;
@@ -123,6 +124,23 @@ std::vector<Record> API::selecter(const std::string& schemaname, const std::vect
     }
     retval = tmpptr->project(tmpptr->selecter(limit), idxs);
     return retval;
+}
+
+void API::execfile(const std::string& filename) {
+    interpreter::Driver* driver = new interpreter::Driver();
+    try {
+        try {
+            driver->Parse(filename);
+        }
+        catch(BasicError &e) {
+            std::cout << "Error occur" << std::endl;
+            std::cout << e.msg << std::endl;
+            return ;
+        }
+    }
+    catch (std::logic_error &e) {
+        return ;
+    }
 }
 
 bool API::checklimits(const SchemaPtr& schema, const Limits& limit) {

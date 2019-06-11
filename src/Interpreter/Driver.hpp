@@ -13,7 +13,7 @@ public:
     explicit Driver();
     ~Driver();
     bool Parse(const std::string& filename);
-
+    bool Parse();
 };
 
 }

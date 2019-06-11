@@ -22,6 +22,8 @@ public:
 
     static int deleter(const std::string& tablename, const RawLimits& limit = std::vector<RawConstraint>());
 
+    static void execfile(const std::string& filename);
+
     static std::vector<Record> selecter(const std::string& tablename, const std::vector<std::string>& attrs = std::vector<std::string>(), const RawLimits& limit = std::vector<RawConstraint>());
 
     static bool checklimits(const SchemaPtr& schema, const Limits& limit);

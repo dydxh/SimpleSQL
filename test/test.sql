@@ -58,5 +58,4 @@ delete from student2 where score < 95.0;
 
 select id, score, name from student2 where score >= 90.0;--QAQOvO fdafs 
 
-drop table student2;
-quit;
+-- drop table student2;
