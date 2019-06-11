@@ -9,22 +9,24 @@
 
 class API {
 public:
-    CatalogPtr catalog;
+    static CatalogPtr catalog;
 
-    API(const CatalogPtr& catalog);
-    ~API();
+    // API(const CatalogPtr& catalog);
+    // ~API();
 
-    void createTable(const std::string& tablename, const std::string& primarykey, const std::vector<AttrPtr>& attrs);
+    static void createTable(const std::string& tablename, const std::string& primarykey, const std::vector<AttrPtr>& attrs);
 
-    void dropTable(const std::string& tablename);
+    static void dropTable(const std::string& tablename);
 
-    void inserter(const std::string& tablename, const Record& record);
+    static void inserter(const std::string& tablename, Record& record);
 
-    int deleter(const std::string& tablename, const RawLimits& limit);
+    static int deleter(const std::string& tablename, const RawLimits& limit = std::vector<RawConstraint>());
 
-    std::vector<Record> selecter(const std::string& tablename, const std::vector<std::string>& attrs, const RawLimits& limit);
+    static std::vector<Record> selecter(const std::string& tablename, const std::vector<std::string>& attrs = std::vector<std::string>(), const RawLimits& limit = std::vector<RawConstraint>());
 
-    bool checklimits(const SchemaPtr& schema, const Limits& limit);
+    static bool checklimits(const SchemaPtr& schema, const Limits& limit);
+
+    static void displaymsg(const std::string& schemaname, const std::vector<Record>& records, const std::vector<std::string>& attrs = std::vector<std::string>());
 };
 
 using APIPtr = std::shared_ptr<API>;

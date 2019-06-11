@@ -17,6 +17,12 @@ enum class Type {
     CHAR
 };
 
+class MiddleType {
+public:
+    Type type;
+    int clen;
+};
+
 extern std::string tostr(Type type);
 
 class Value {
@@ -27,7 +33,7 @@ public:
 
     virtual int size() { return 0; }
 
-    virtual std::string tostr() {
+    virtual std::string tostr() const {
         switch (type) {
             case Type::INT :
                 return std::to_string(*(int *) ptr);

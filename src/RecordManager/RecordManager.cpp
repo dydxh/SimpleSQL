@@ -143,8 +143,7 @@ int RecordManager::deleter(const Limits& limit) {
     return retval;
 }
 
-std::vector<Record> RecordManager::
-selecter(const Limits& limit) {
+std::vector<Record> RecordManager::selecter(const Limits& limit) {
     std::vector<Record> retval;
     BlockPtr tmpblk;
     unsigned long long ptr = header.recordstart;
