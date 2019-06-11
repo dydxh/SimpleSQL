@@ -6,7 +6,6 @@
 
 using FilePos = std::pair<int, int>;
 auto CalcFilePos = [](const unsigned long long &pos) { return std::make_pair(pos / BLOCK_SIZE, pos % BLOCK_SIZE); };
-auto ReadRecord = []() {};
 
 std::map<std::string, std::shared_ptr<RecordManager>> RecordManager::recordbuf;
 

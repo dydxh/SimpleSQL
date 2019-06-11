@@ -7,7 +7,7 @@
 BplusTree::BplusTree(const FilePtr &filePtr, const BufferPtr &buffer, const RecordPtr &record, const BlockPtr root,
                      const std::string columnName) {
     this->fileManager = filePtr;
-    this->bufferManager = bufferManager;
+    this->bufferManager = buffer;
     this->recordManager = record;
     this->root = root;
     this->columnName = columnName;
@@ -15,23 +15,24 @@ BplusTree::BplusTree(const FilePtr &filePtr, const BufferPtr &buffer, const Reco
     NodePT nodeBuffer = new BasicNode;
     READ_NODE_BUF(root, nodeBuffer);
     NEXT_NODE(nodeBuffer) = 0;
-    nodeBuffer->isLeaf = true;
+    nodeBuffer->isLeaf = 1;
     nodeBuffer->size = 0;
     WRITE_BACK_NODE_BUF(root, nodeBuffer);
 }
 
+
 BlockPtr BplusTree::findNode(const Value &v) {
     stack.clear();
     stackPos.clear();
+    now = -1;
     // read all the value to a temp
-    NodePT nodeBuffer = new BasicNode;
+    auto nodeBuffer = new BasicNode;
     BlockPtr blk = root;
-    blk->setoffset(0);
-    blk->read(nodeBuffer, NODE_SIZE);
-    while (0x1 & nodeBuffer->isLeaf) {
-        stack.push_back(blk);
+    READ_NODE_BUF(blk, nodeBuffer);
+    while (nodeBuffer->size != 0 && nodeBuffer->isLeaf != 1) {
+        stack.push_back(blk);now++;
         if (Value::valcmp(GETVAL(nodeBuffer->roffset[nodeBuffer->size - 1]), v) <= 0) {
-            // val <= v
+            // val[size - 1] <= v
             stackPos.push_back(nodeBuffer->size);
             blk = bufferManager->getblock(MakeID(fileManager, nodeBuffer->foffset[nodeBuffer->size]));
             READ_NODE_BUF(blk, nodeBuffer);
@@ -41,23 +42,22 @@ BlockPtr BplusTree::findNode(const Value &v) {
             if (Value::valcmp(GETVAL(nodeBuffer->roffset[i]), v) > 0) {
                 // val > v
                 stackPos.push_back(i);
-                if (nodeBuffer->foffset[i] != 0) {
-                    blk = bufferManager->getblock(MakeID(fileManager, nodeBuffer->foffset[i]));
-                    // update node buffer
-                    READ_NODE_BUF(blk, nodeBuffer);
-                }
+                //if (nodeBuffer->foffset[i] != 0) {
+                blk = bufferManager->getblock(MakeID(fileManager, nodeBuffer->foffset[i]));
+                // update node buffer
+                READ_NODE_BUF(blk, nodeBuffer);
+                //}
                 break;
             }
         }
-        return blk;
     }
+    return blk;
 }
 
 unsigned long long BplusTree::findOne(Value v) {
     BlockPtr blk = findNode(v);
     auto nodeBuffer = new BasicNode;
-    blk->setoffset(0);
-    blk->read(nodeBuffer, NODE_SIZE);
+    READ_NODE_BUF(blk, nodeBuffer);
     for (int i = 0; i < nodeBuffer->size; i++) {
         if (0 == Value::valcmp(GETVAL(nodeBuffer->roffset[i]), v)) {
             // return the offset(ptr) of the record
@@ -162,8 +162,8 @@ bool BplusTree::insert(unsigned long long roffset, unsigned long long foffset) {
         auto nNodeBuffer = new BasicNode;
         READ_NODE_BUF(nblk, nNodeBuffer);
         NEXT_NODE(nNodeBuffer) = NEXT_NODE(nodeBuffer);
-        NEXT_NODE(nodeBuffer) = blk->blocknumber();
-        nNodeBuffer->isLeaf = true;
+        NEXT_NODE(nodeBuffer) = nblk->blocknumber();
+        nNodeBuffer->isLeaf = 1;
         nNodeBuffer->size = 0;
         nodeBuffer->size = NODE_SIZE_HALF;
         if (Value::valcmp(GETVAL(nodeBuffer->roffset[NODE_SIZE_HALF - 1]), v) < 0) {
@@ -189,7 +189,7 @@ bool BplusTree::insert(unsigned long long roffset, unsigned long long foffset) {
             // new node needs only copy
             for (int i = NODE_SIZE_HALF - 1; i < NODE_SIZE; i++) {
                 nNodeBuffer->roffset[nNodeBuffer->size] = nodeBuffer->roffset[i];
-                nNodeBuffer->foffset[nodeBuffer->size++] = nodeBuffer->foffset[i];
+                nNodeBuffer->foffset[nNodeBuffer->size++] = nodeBuffer->foffset[i];
             }
             // origin node needs a insertion
             for (int i = NODE_SIZE_HALF - 1; i >= 1; i--) {
@@ -220,26 +220,24 @@ bool BplusTree::insert(unsigned long long roffset, unsigned long long foffset) {
     return true;
 }
 
-void BplusTree::insertInto(unsigned long long roffset, BlockPtr nenodeBuffertBlock) {
+void BplusTree::insertInto(unsigned long long roffset, const BlockPtr& nextBlock) {
     if (now == -1) { // root
-        BlockPtr blk = createNode();
-        auto nodeBuffer = new BasicNode;
-        auto rootNode = new BasicNode;
-        READ_NODE_BUF(stack[0], nodeBuffer);
-        blk->setdirty(true);
+        BlockPtr rootblk = createNode(); // the new root node
+        auto rootNodeBuffer = new BasicNode;
 
         //TODO: check the root
-        READ_NODE_BUF(root, rootNode);
-        rootNode->isLeaf = false;
-        rootNode->size = 1;
-        rootNode->foffset[0] = blk->blocknumber();
-        rootNode->foffset[1] = nenodeBuffertBlock->blocknumber();
-        rootNode->roffset[0] = roffset;
+        rootNodeBuffer->isLeaf = 0;
+        rootNodeBuffer->size = 1;
+        rootNodeBuffer->roffset[0] = roffset;
+        rootNodeBuffer->foffset[0] = stack[0]->blocknumber();
+        rootNodeBuffer->foffset[1] = nextBlock->blocknumber();
         // Write back root
-        WRITE_BACK_NODE_BUF(root, rootNode);
+        WRITE_BACK_NODE_BUF(rootblk, rootNodeBuffer);
+        // update the root
+        root = rootblk;
     } else {
         BlockPtr blk = stack[now];
-        NodePT nodeBuffer = new BasicNode;
+        auto nodeBuffer = new BasicNode;
         READ_NODE_BUF(blk, nodeBuffer);
         int pos = stackPos[now];
         // insert at (rofst[i], fofst[i + 1]) (i = pos)
@@ -251,7 +249,7 @@ void BplusTree::insertInto(unsigned long long roffset, BlockPtr nenodeBuffertBlo
                 nodeBuffer->foffset[i] = nodeBuffer->foffset[i - 1];
             }
             nodeBuffer->roffset[pos] = roffset;
-            nodeBuffer->foffset[pos + 1] = nenodeBuffertBlock->blocknumber();
+            nodeBuffer->foffset[pos + 1] = nextBlock->blocknumber();
             nodeBuffer->size++;
         } else {
             /* the node is full and needs splitting
@@ -292,7 +290,7 @@ void BplusTree::insertInto(unsigned long long roffset, BlockPtr nenodeBuffertBlo
                     // do simple replacement
                     // v: [* * *] (&) [* *]   >>> throw the (&)
                     // s:[0 1 2 3]   [& 4 5]  >>> do the simple replacement
-                    nNodeBuffer->foffset[0] = nenodeBuffertBlock->blocknumber();
+                    nNodeBuffer->foffset[0] = nextBlock->blocknumber();
                     parentValue = roffset;
                 } else {
                     // origin node requires insertion
@@ -301,7 +299,7 @@ void BplusTree::insertInto(unsigned long long roffset, BlockPtr nenodeBuffertBlo
                     parentValue = nodeBuffer->roffset[NODE_SIZE_HALF - 1];
                     for (int i = NODE_SIZE_HALF - 1; i >= 0; i--) {
                         if (i == pos) {
-                            nodeBuffer->foffset[i + 1] = nenodeBuffertBlock->blocknumber();
+                            nodeBuffer->foffset[i + 1] = nextBlock->blocknumber();
                             nodeBuffer->roffset[i] = roffset;
                             break;
                         }

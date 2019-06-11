@@ -77,7 +77,7 @@ public:
     // insert just record the offset to make it easy to maintain
     bool insert(unsigned long long roffset, unsigned long long foffset);
 
-    void insertInto(unsigned long long roffset, BlockPtr nextBlock);
+    void insertInto(unsigned long long roffset, const BlockPtr& nextBlock);
 };
 
 using BplusPtr = std::shared_ptr<BplusTree>;

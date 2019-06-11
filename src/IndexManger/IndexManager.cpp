@@ -25,7 +25,7 @@ IndexManager::IndexManager(const BufferPtr &buffer, const SchemaPtr &schema, con
         FileManager::createfile(filename.c_str());
         this->indexFile = std::make_shared<FileManager>(filename.c_str());
         FileManager::filebuf[filename] = indexFile;
-        assert(indexFile->allocblock() == 0);
+        // assert(indexFile->allocblock() == 0);
         // TODO: write the file header
     }
     this->bplusTree = std::make_shared<BplusTree>(
@@ -39,13 +39,14 @@ IndexManager::IndexManager(const BufferPtr &buffer, const SchemaPtr &schema, con
 
 void IndexManager::buildIndex() {
     BlockPtr tmpblk;
+    int count = 0;
     unsigned long long ptr = recordManager->header.recordstart; // equal to foffset
     while (ptr) {
         if (ptr & DELETE_TAG) {
             ptr &= DELETE_MASK;
             // skip a delete record (current record)
         } else {
-            //std::cout << "Inserting to tree attr offset: " << schema->name2offset[std::string(columnName)] << std::endl;
+            //std::cout << count++ << " Inserting ptr: " << ptr << std::endl;
             bplusTree->insert(ptr + sizeof(unsigned long long) + schema->name2offset[std::string(columnName)], ptr);
         }
         // read the next ptr to read
@@ -65,17 +66,17 @@ unsigned long long IndexManager::findOne(Value &v) {
 }
 
 std::vector<unsigned long long> IndexManager::findByRange(
-        bool wl, bool leq, const Value& l,
-        bool wr, bool req, const Value& r
+        bool wl, bool leq, const Value &l,
+        bool wr, bool req, const Value &r
 ) {
     std::vector<unsigned long long> res;
     bplusTree->findByRange(
             wl, leq, l,
             wr, req, r,
-            [&res,this](int count, unsigned long long ptr) {
+            [&res, this](int count, unsigned long long ptr) {
                 res.push_back(ptr);
-                std::cout << count << " >>> ";
                 //TODO:remove
+                std::cout << count << " >>> ";
                 printRecord(ptr);
             });
     return res;
