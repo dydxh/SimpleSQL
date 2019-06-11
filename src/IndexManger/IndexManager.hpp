@@ -33,7 +33,8 @@ public:
             bool wl, bool leq, const Value &l,
             bool wr, bool req, const Value &r
     );
-
+    // try to delete the given value in the tree
+    void removeOne(const Value &v);
 private:
     void printRecord(unsigned long long ptr);
 };

@@ -82,6 +82,10 @@ std::vector<unsigned long long> IndexManager::findByRange(
     return res;
 }
 
+void IndexManager::removeOne(const Value &v) {
+    bplusTree->remove(v);
+}
+
 void IndexManager::printRecord(unsigned long long ptr) {
     FilePos pos = CalcFilePos(ptr);
     BlockPtr blk = buffer->getblock(MakeID(recordManager->file, pos.first));

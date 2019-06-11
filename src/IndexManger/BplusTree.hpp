@@ -70,7 +70,7 @@ public:
             const BpRangeConsumer& consumer
     );
 
-    bool remove(Value v);
+    bool remove(const Value& v);
 
     void removeForm();
 

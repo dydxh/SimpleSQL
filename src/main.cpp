@@ -1304,13 +1304,16 @@ int main() {
         IndexPtr index = std::make_shared<IndexManager>(buffermanager, catalogmanager->schemas["table_name"], "id");
         index->buildIndex();
         std::cout << "Build Finished" << std::endl;
-        int ii = 1000, iii = 1180;
+        int ii = 1025, iii = 1035;
         IntValue v = IntValue(&ii);
         IntValue vv = IntValue(&iii);
 //         std::cout<<index->findOne(v).tostr()<<std::endl;
         index->findOne(v);
-        index->findOne(vv);
-//        std::vector<unsigned long long> res = index->findByRange(true, false, v, true, false, vv);
+//        index->findOne(vv);
+        index->findByRange(true, true, v, true, false, vv);
+        index->removeOne(v);
+        index->findByRange(true, true, v, true, false, vv);
+
     }
     catch (BasicError &e) {
         std::cout << "Error occur" << std::endl;
