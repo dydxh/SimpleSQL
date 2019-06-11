@@ -5,21 +5,21 @@
 #include "../Type/Value.hpp"
 
 using FilePos = std::pair<int, int>;
-auto CalcFilePos = [](const unsigned long long& pos) {return std::make_pair(pos / BLOCK_SIZE, pos % BLOCK_SIZE);};
+auto CalcFilePos = [](const unsigned long long &pos) { return std::make_pair(pos / BLOCK_SIZE, pos % BLOCK_SIZE); };
 auto ReadRecord = []() {};
 
 std::map<std::string, std::shared_ptr<RecordManager>> RecordManager::recordbuf;
 
-RecordManager::RecordManager(const BufferPtr& buffer, const CatalogPtr& catalog, std::string schemaname) {
-    if(catalog->schema_exist(schemaname) == false) {
-        throw SchemaError("[Error] Schema " + schemaname + " doesn't exist." );
+RecordManager::RecordManager(const BufferPtr &buffer, const CatalogPtr &catalog, std::string schemaname) {
+    if (catalog->schema_exist(schemaname) == false) {
+        throw SchemaError("[Error] Schema " + schemaname + " doesn't exist.");
     }
     this->schema = catalog->schemas[schemaname];
     this->buffer = buffer;
     this->schemaname = schemaname;
     std::string filename = FILENAME_PREFIX + schemaname + "-" + CATALOG_NAME;
 
-    if(FileManager::filexist(filename.c_str()) == false) {
+    if (FileManager::filexist(filename.c_str()) == false) {
         FileManager::createfile(filename.c_str());
         file = std::make_shared<FileManager>(filename.c_str());
         FileManager::filebuf[filename] = file;
@@ -29,9 +29,8 @@ RecordManager::RecordManager(const BufferPtr& buffer, const CatalogPtr& catalog,
         tmpblk->setoffset(0);
         tmpblk->write(&tmpheader, sizeof(tmpheader));
         assert(file->allocblock() == 1);
-    }
-    else {
-        if(FileManager::filebuf[filename].expired() == false)
+    } else {
+        if (FileManager::filebuf[filename].expired() == false)
             file = FileManager::filebuf[filename].lock();
         else {
             file = std::make_shared<FileManager>(filename.c_str());
@@ -43,11 +42,11 @@ RecordManager::RecordManager(const BufferPtr& buffer, const CatalogPtr& catalog,
 }
 
 RecordManager::~RecordManager() {
-    
+
 }
 
-bool RecordManager::recordexist(const std::string& schemaname) {
-    if(recordbuf.find(schemaname) != recordbuf.end())
+bool RecordManager::recordexist(const std::string &schemaname) {
+    if (recordbuf.find(schemaname) != recordbuf.end())
         return true;
     return false;
 }
@@ -63,24 +62,23 @@ void RecordManager::readheader() {
     tmpblk->read(&(this->header), sizeof(header));
 }
 
-void RecordManager::inserter(const Record& record) {
+void RecordManager::inserter(const Record &record) {
     FilePos pos = CalcFilePos(header.freestart);
     BlockPtr tmpblk = buffer->getblock(MakeID(file, pos.first));
     tmpblk->setoffset(pos.second);
 
     int recordsize = sizeof(unsigned long long);
     tmpblk->write(&header.recordstart, sizeof(unsigned long long));
-    for(int i = 0; i < record.size(); i++) {
+    for (int i = 0; i < record.size(); i++) {
         tmpblk->write(record[i].ptr, schema->attrs[i]->size());
         recordsize += schema->attrs[i]->size();
     }
     header.recordstart = header.freestart;
     header.recordnumber += 1;
-    if(pos.second + (recordsize << 1) >= BLOCK_SIZE) {
+    if (pos.second + (recordsize << 1) >= BLOCK_SIZE) {
         header.freestart = (header.blocknumber++) * BLOCK_SIZE;
         file->allocblock();
-    }
-    else
+    } else
         header.freestart += recordsize;
     tmpblk = buffer->getblock(MakeID(file, 0));
     tmpblk->setoffset(0);
@@ -98,38 +96,37 @@ int RecordManager::deleteall() {
     return retval;
 }
 
-int RecordManager::deleter(const Limits& limit) {
+int RecordManager::deleter(const Limits &limit) {
     int retval = 0;
     BlockPtr tmpblk;
     unsigned long long ptr = header.recordstart;
-    while(ptr) {
+    while (ptr) {
         FilePos pos = CalcFilePos(ptr);
         tmpblk = buffer->getblock(MakeID(file, pos.first));
         tmpblk->setoffset(pos.second);
         tmpblk->read(&ptr, sizeof(unsigned long long));
-        if(ptr & DELETE_TAG) {
+        if (ptr & DELETE_TAG) {
             ptr &= DELETE_MASK;
             continue;
         }
         Record record;
-        for(auto& e : schema->attrs) {
+        for (auto &e : schema->attrs) {
             Value val;
             val.type = e->vtype;
-            if(val.type == Type::CHAR) {
+            if (val.type == Type::CHAR) {
                 val.clen = e->clen;
                 val.ptr = new char[val.clen];
-            }
-            else if(val.type == Type::INT) val.ptr = new int;
+            } else if (val.type == Type::INT) val.ptr = new int;
             else val.ptr = new float;
             tmpblk->read(val.ptr, e->size());
             record.emplace_back(std::move(val));
         }
         bool to_delete = true;
-        for(auto& e : limit) {
+        for (auto &e : limit) {
             to_delete &= Constraint::valcmp(e.op, record[e.attridx], e.val);
-            if(to_delete == false) break;
+            if (to_delete == false) break;
         }
-        if(to_delete) {
+        if (to_delete) {
             retval += 1;
             unsigned long long newval = ptr | DELETE_TAG;
             tmpblk->setoffset(pos.second);
@@ -148,58 +145,66 @@ std::vector<Record> RecordManager::selecter(const Limits& limit) {
     BlockPtr tmpblk;
     unsigned long long ptr = header.recordstart;
 
-    while(ptr) {
+    while (ptr) {
         FilePos pos = CalcFilePos(ptr);
         tmpblk = buffer->getblock(MakeID(file, pos.first));
         tmpblk->setoffset(pos.second);
         tmpblk->read(&ptr, sizeof(unsigned long long));
-        if(ptr & DELETE_TAG) {
+        if (ptr & DELETE_TAG) {
             ptr &= DELETE_MASK;
             continue;
         }
         Record record;
-        for(auto& e : schema->attrs) {
+        for (auto &e : schema->attrs) {
             Value val;
             val.type = e->vtype;
-            if(val.type == Type::CHAR) {
+            if (val.type == Type::CHAR) {
                 val.clen = e->clen;
                 val.ptr = new char[val.clen];
-            }
-            else if(val.type == Type::INT) val.ptr = new int;
+            } else if (val.type == Type::INT) val.ptr = new int;
             else val.ptr = new float;
             tmpblk->read(val.ptr, e->size());
             record.emplace_back(std::move(val));
         }
         bool reserved = true;
-        for(auto& e : limit) {
+        for (auto &e : limit) {
             reserved &= Constraint::valcmp(e.op, record[e.attridx], e.val);
-            if(reserved == false) break;
+            if (reserved == false) break;
         }
-        if(reserved) retval.emplace_back(std::move(record));
+        if (reserved) retval.emplace_back(std::move(record));
     }
     return retval;
 }
 
-Value RecordManager::getVal(const char * columnName, unsigned long long roffset) {
+Value RecordManager::getVal(const char *columnName, unsigned long long roffset) {
     FilePos pos = CalcFilePos(roffset);
     BlockPtr tempblk = buffer->getblock(MakeID(file, pos.first));
     int size = schema->name2attrs[std::string(columnName)]->size();
-    void * ptr = malloc(size);
+    void *ptr = malloc(size);
     tempblk->setoffset(pos.second);
-    tempblk->read(&ptr, size);
+    tempblk->read(ptr, size);
     Value val;
     val.type = schema->name2attrs[std::string(columnName)]->vtype;
     val.ptr = ptr;
+    //TODO remove
+//    if(val.type == Type::INT) {
+//        std::cout << "int value: " << *((int *)ptr) << std::endl;
+//    } else if (val.type == Type::FLOAT) {
+//        std::cout << "float value: " << *((float *)ptr) << std::endl;
+//    } else {
+//        std::cout << "char value: " << *((char *)ptr) << std::endl;
+//    }
     if (val.type == Type::CHAR) {
         val.clen = schema->name2attrs[std::string(columnName)]->clen;
     }
     return val;
 }
-std::vector<Record> RecordManager::project(const std::vector<Record>& records, const std::vector<int>& idx) {
+
+std::vector<Record> RecordManager::project(const std::vector<Record> &records, const std::vector<int> &idx) {
     std::vector<Record> retval;
-    for(auto& record : records) {
+    for (auto &record : records) {
         Record val;
-        for(auto& pos : idx) 
+        for (auto &pos : idx)
             val.push_back(record[pos]);
         retval.push_back(val);
     }

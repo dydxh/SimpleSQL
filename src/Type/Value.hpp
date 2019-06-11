@@ -68,13 +68,15 @@ public:
 };
 
 class IntValue : public Value {
-    IntValue(int *ptr_) {
-        this->type = Type::INT;
-        this->ptr = ptr_;
-    }
 
     int size() override {
         return sizeof(int);
+    }
+
+public:
+    explicit IntValue(int *ptr_) {
+        this->type = Type::INT;
+        this->ptr = ptr_;
     }
 };
 

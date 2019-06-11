@@ -11,7 +11,7 @@
 #include "API/API.hpp"
 #include "Interpreter/Driver.hpp"
 
-Record cons(int a, const char* b, int c, float d) {
+Record cons(int a, const char *b, int c, float d) {
     Record tmpr;
     Value tmp;
     tmp.type = Type::INT;
@@ -20,7 +20,7 @@ Record cons(int a, const char* b, int c, float d) {
     tmp.type = Type::CHAR;
     tmp.clen = strlen(b) + 1;
     tmp.ptr = new char[tmp.clen];
-    strcpy((char*)tmp.ptr, b);
+    strcpy((char *) tmp.ptr, b);
     tmpr.push_back(tmp);
     tmp.type = Type::INT;
     tmp.ptr = new int(c);
