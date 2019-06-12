@@ -11,6 +11,12 @@
 CatalogPtr API::catalog;
 
 void API::createTable(const std::string& schemaname, const std::string& primarykey, const std::vector<AttrPtr>& attrs) {
+    if(catalog->schema_exist(schemaname)) {
+        throw CatalogError("[Error] Schema " + schemaname + " exist.");
+    }
+    if(catalog->index_exist(schemaname)) {
+        throw CatalogError("[Error] '" + schemaname + "' is already a index name.");
+    }
     int idx = -1;
     for(int i = 0; i < attrs.size(); i++) {
         if(attrs[i]->name == primarykey) {
@@ -32,6 +38,32 @@ void API::dropTable(const std::string& schemaname) {
     if(RecordManager::recordbuf[schemaname]) {
         RecordManager::recordbuf[schemaname]->droptable();
     }
+}
+
+void API::createIndex(const std::string& indexname, const std::string& schemaname, const std::string& columname) {
+    SchemaPtr schema = catalog->schemas[schemaname];
+    if(catalog->schema_exist(schemaname))
+        throw SchemaError("[Error] Schema '" + schemaname + "' doesn't exist.");
+    if(catalog->schema_exist(indexname))
+        throw SchemaError("[Error] Duplicate name of '" + indexname + "'.");
+    if(catalog->index_exist(indexname))
+        throw SchemaError("[Error] Index '" + indexname + "' already exist.");
+    int idx = -1;
+    for(int i = 0; i < schema->attrs.size(); i++) {
+        if(schema->attrs[i]->name == columname) {
+            if(schema->attrs[i]->unique == 0)
+                throw AttributeError("[Error] Must create index on unique attribute.");
+            idx = i;
+            break;
+        }
+    }
+    if(idx == -1) throw AttributeError("[Error] Column '" + columname + "' doesn't exist.");
+
+    catalog->createIndex(indexname, schemaname, columname);
+}
+
+void API::dropIndex(const std::string& indexname) {
+    catalog->dropIndex(indexname);
 }
 
 void API::inserter(const std::string& schemaname, Record& record) {
@@ -96,6 +128,13 @@ int API::deleter(const std::string& schemaname, const RawLimits& rawlimits) {
 }
 
 std::vector<Record> API::selecter(const std::string& schemaname, const std::vector<std::string>& attrs, const RawLimits& rawlimits) {
+    if(catalog->index_exist(schemaname)) {
+        return selectbyindex(schemaname, attrs, rawlimits);
+    }
+    else if(catalog->schema_exist(schemaname) == false) {
+        throw CatalogError("[Error] Schema '" + schemaname + "' doesn't exist.");
+    }
+
     SchemaPtr schema;
     if(RecordManager::recordexist(schemaname))
         schema = RecordManager::recordbuf[schemaname]->schema;
@@ -108,7 +147,6 @@ std::vector<Record> API::selecter(const std::string& schemaname, const std::vect
     Limits limit = schema->translimits(rawlimits);
     checklimits(schema, limit);
     
-    std::vector<Record> retval;
     std::vector<int> idxs;
     RecordPtr tmpptr = RecordManager::recordbuf[schemaname];
     if(attrs.empty()) {
@@ -122,7 +160,53 @@ std::vector<Record> API::selecter(const std::string& schemaname, const std::vect
             else idxs.push_back(idx);
         }
     }
-    retval = tmpptr->project(tmpptr->selecter(limit), idxs);
+
+    std::vector<Record> retval = RecordManager::project(tmpptr->selecter(limit), idxs);
+    return retval;
+}
+
+std::vector<Record> API::selectbyindex(const std::string& indexname, const std::vector<std::string>& attrs, const RawLimits& rawlimits) {
+    IndexPtr index = catalog->name2index[indexname];
+    SchemaPtr schema = index->schema;
+
+    Limits limit = schema->translimits(rawlimits);
+    int buildidx = schema->getidx(index->columnName);
+
+    IndexLimits indexlimits;
+    for(auto& e : limit) {
+        if(buildidx != e.attridx)
+            throw AttributeError("[Error] All constraint must be '" + index->columnName + "'.");
+    }
+    if(limit.empty()) {
+
+    }
+    else if(limit.size() == 1) {
+
+    }
+    else if(limit.size() == 2) {
+        
+    }
+    else {
+        throw AttributeError("[Error] Constraints must be a range or equal to one value.");
+    }
+    //transfer limits
+    
+    std::vector<int> idxs;
+    if(attrs.empty()) {
+        for(int i = 0; i < schema->attrs.size(); i++)
+            idxs.push_back(i);
+    }
+    else {
+        for(auto& e : attrs) {
+            int idx = schema->getidx(e);
+            if(idx == -1) throw AttributeError("[Error] Attribute '" + e + "' doesn't exist.");
+            else idxs.push_back(idx);
+        }
+    }
+    
+    std::vector<Record> retval;
+    // retval = RecordManager::project(index->selecter(limit), idxs);
+    //get retval by limits
     return retval;
 }
 

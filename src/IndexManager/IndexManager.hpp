@@ -13,7 +13,16 @@
 #include "../Type/Value.hpp"
 #include "./BplusTree.hpp"
 
+struct IndexHeader {
+    int nextblk, deleted;
+    char indexname[MAX_NAME_LEN];
+    char schemaname[MAX_NAME_LEN];
+    char columnname[MAX_NAME_LEN];
+};
+
 class IndexManager {
+public:
+    IndexHeader header;
     RecordPtr recordManager;
     BufferPtr buffer;
     SchemaPtr schema;
@@ -21,8 +30,7 @@ class IndexManager {
     FilePtr indexFile; // the created index file
 
     BplusPtr bplusTree;
-public:
-    IndexManager(const BufferPtr &buffer, const SchemaPtr &schema, std::string colName);
+    IndexManager(const BufferPtr &buffer, const std::string& indexname, const SchemaPtr &schema, std::string colName);
 
     // ~IndexManager();
     void buildIndex();

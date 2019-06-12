@@ -124,11 +124,13 @@ drop_table_stmt: DROP TABLE IDENTIFIER {
     ;
 
 create_index_stmt: CREATE INDEX IDENTIFIER ON IDENTIFIER LPAREN IDENTIFIER RPAREN {
+        API::createIndex($3, $5, $7);
         std::cout << "Create index '" << $3 << "' successfully." << std::endl;
     }
     ;
 
 drop_index_stmt: DROP INDEX IDENTIFIER {
+        API::dropIndex($3);
         std::cout << "Drop index '" << $3 << "' successfully." << std::endl;
     }
     ;

@@ -1,5 +1,6 @@
 #include <memory>
 #include <cassert>
+#include <algorithm>
 #include "../utils/config.hpp"
 #include "CatalogManager.hpp"
 #include "Schema.hpp"
@@ -72,14 +73,31 @@ void CatalogManager::readbody() {
         nextblk = tmpschema->header.nextblk;
         schemas[std::string(tmpschema->header.name)] = tmpschema;
         name2offset[std::string(tmpschema->header.name)] = curblk;
+        schema2indexes[std::string(tmpschema->header.name)] = std::vector<std::string>();
+        curblk = nextblk;
+    }
+    curblk = header.indexblk;
+    while(curblk) {
+        BlockPtr tmpblk = buffer->getblock(MakeID(file, curblk));
+        tmpblk->setoffset(0);
+        IndexHeader tmpheader;
+
+        tmpblk->read(&(tmpheader), sizeof(tmpheader));
+        if(tmpheader.deleted) {
+            curblk = tmpheader.nextblk;
+            continue;
+        }
+        IndexPtr tmpptr = std::make_shared<IndexManager>(this->buffer, tmpheader.indexname, tmpheader.schemaname, tmpheader.columnname);
+
+        nextblk = tmpheader.nextblk;
+        name2index[std::string(tmpheader.indexname)] = tmpptr;
+        name2offset[std::string(tmpheader.indexname)] = curblk;
+        schema2indexes[std::string(tmpheader.schemaname)].push_back(tmpheader.indexname);
         curblk = nextblk;
     }
 }
 
 void CatalogManager::createTable(const std::string& schemaname, const int& idx, const std::vector<AttrPtr>& attributes) {
-    if(schema_exist(schemaname)) {
-        throw CatalogError("Schema " + schemaname + " exist.");
-    }
     SchemaPtr tmpschema = std::make_shared<Schema>(this->file, this->buffer);
 
     memcpy(tmpschema->header.name, schemaname.c_str(), MAX_NAME_LEN);
@@ -124,4 +142,50 @@ void CatalogManager::dropTable(const std::string& schemaname) {
     tmpblk->write(&tmpval, sizeof(tmpval));
     schemas.erase(schemaname);
     name2offset.erase(schemaname);
+    for(auto& e : schema2indexes[schemaname])
+        dropIndex(e);
+    schema2indexes.erase(schemaname);
+}
+
+void CatalogManager::createIndex(const std::string& indexname, const std::string& schemaname, const std::string& columname) {
+    IndexPtr indexptr = std::make_shared<IndexManager>(this->buffer, indexname, schemaname, columname);
+
+    //modify catalog file header and write index header to file
+    IndexHeader tmpheader;
+    tmpheader.nextblk = this->header.indexblk;
+    tmpheader.deleted = 0;
+    memcpy(tmpheader.indexname, indexname.c_str(), MAX_NAME_LEN);
+    memcpy(tmpheader.schemaname, schemaname.c_str(), MAX_NAME_LEN);
+    memcpy(tmpheader.columnname, columname.c_str(), MAX_NAME_LEN);
+    
+    this->header.indexblk = this->header.blocknumber++;
+    file->allocblock();
+
+    BlockPtr tmpblk = buffer->getblock(MakeID(file, 0));
+    tmpblk->setoffset(0);
+    tmpblk->write(&(this->header), sizeof(this->header));
+
+    tmpblk = buffer->getblock(MakeID(file, this->header.indexblk));
+    tmpblk->setoffset(0);
+    tmpblk->write(&tmpheader, sizeof(tmpheader));
+
+    name2index[indexname] = indexptr;
+    name2offset[indexname] = this->header.indexblk;
+    schema2indexes[schemaname].push_back(indexname);
+}
+
+void CatalogManager::dropIndex(const std::string& indexname) {
+    if(index_exist(indexname) == false) {
+        throw CatalogError("Index '" + indexname + "' doesn't exist.");
+    }
+    int offset = name2offset[indexname], tmpval = 1;
+    BlockPtr tmpblk = buffer->getblock(MakeID(file, offset));
+    tmpblk->setoffset(4);
+    tmpblk->write(&tmpval, sizeof(tmpval));
+    name2index[indexname]->indexFile->setdelete();
+    name2index.erase(indexname);
+    name2offset.erase(indexname);
+
+    std::string schemaname = name2index[indexname]->header.schemaname;
+    schema2indexes[schemaname].erase(std::find(schema2indexes[schemaname].begin(), schema2indexes[schemaname].end(), indexname));
 }

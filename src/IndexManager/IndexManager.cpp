@@ -11,13 +11,13 @@
 using FilePos = std::pair<int, int>;
 auto CalcFilePos = [](const unsigned long long &pos) { return std::make_pair(pos / BLOCK_SIZE, pos % BLOCK_SIZE); };
 
-IndexManager::IndexManager(const BufferPtr &buffer, const SchemaPtr &schema, const std::string colName) {
+IndexManager::IndexManager(const BufferPtr &buffer, const std::string& indexname, const SchemaPtr &schema, const std::string colName) {
     this->buffer = buffer;
     this->columnName = colName;
     this->schema = schema;
     this->recordManager = RecordManager::recordbuf[schema->header.name];
 
-    std::string filename = std::string(FILENAME_PREFIX) + "index-" + colName + "-" + std::string(schema->header.name);
+    std::string filename = FILENAME_PREFIX + indexname + "-indexon-" + colName + "-of-" + schema->header.name;
 
     if (FileManager::filexist(filename.c_str())) {
         indexFile = std::make_shared<FileManager>(filename.c_str());
