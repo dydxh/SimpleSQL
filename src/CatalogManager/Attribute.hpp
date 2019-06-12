@@ -19,6 +19,7 @@ public:
         vtype = static_cast<Type>((val >> 1) & 3);
         clen = val >> 3;
     }
+    Attribute(const std::string name, const int unique, const int clen, const Type& type) : name(name), unique(unique), clen(clen), vtype(type) {}
     ~Attribute() {};
     
     inline void setattr(int val) {
