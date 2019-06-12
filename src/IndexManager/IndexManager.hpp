@@ -30,20 +30,27 @@ public:
     FilePtr indexFile; // the created index file
 
     BplusPtr bplusTree;
-    IndexManager(const BufferPtr &buffer, const std::string& indexname, const SchemaPtr &schema, std::string colName);
+
+    IndexManager(const BufferPtr &buffer, const std::string &indexname, const SchemaPtr &schema, std::string colName);
 
     // ~IndexManager();
     void buildIndex();
 
     unsigned long long findOne(Value &v);
 
+    // try to delete the given value in the tree
     void removeOne(const Value &v);
 
     std::vector<unsigned long long> findByRange(
             bool wl, bool leq, const Value &l,
             bool wr, bool req, const Value &r
     );
-    // try to delete the given value in the tree
+
+    std::vector<Record> translateAndFilter(
+            const std::vector<unsigned long long> &results,
+            const Limits &limits
+    );
+
 private:
     void printRecord(unsigned long long ptr);
 };

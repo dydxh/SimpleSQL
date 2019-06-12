@@ -11,7 +11,8 @@
 using FilePos = std::pair<int, int>;
 auto CalcFilePos = [](const unsigned long long &pos) { return std::make_pair(pos / BLOCK_SIZE, pos % BLOCK_SIZE); };
 
-IndexManager::IndexManager(const BufferPtr &buffer, const std::string& indexname, const SchemaPtr &schema, const std::string colName) {
+IndexManager::IndexManager(const BufferPtr &buffer, const std::string &indexname, const SchemaPtr &schema,
+                           const std::string colName) {
     this->buffer = buffer;
     this->columnName = colName;
     this->schema = schema;
@@ -59,10 +60,10 @@ void IndexManager::buildIndex() {
 }
 
 unsigned long long IndexManager::findOne(Value &v) {
-    unsigned long long ptr = bplusTree->findOne(v);
+    unsigned long long ptr = bplusTree->findOne(v); // roffset
     //TODO:remove
-    this->printRecord(ptr - sizeof(unsigned long long) - schema->name2offset[columnName]);
-    return ptr;
+    printRecord(ptr - sizeof(unsigned long long) - schema->name2offset[columnName]);
+    return ptr - sizeof(unsigned long long) - schema->name2offset[columnName];
 }
 
 std::vector<unsigned long long> IndexManager::findByRange(
@@ -110,3 +111,34 @@ void IndexManager::printRecord(unsigned long long ptr) {
     std::cout << std::endl;
 }
 
+std::vector<Record> IndexManager::translateAndFilter(
+        const std::vector<unsigned long long> &results,
+        const Limits &limits
+) {
+    std::vector<Record> retval;
+    for (unsigned long long result : results) {
+        FilePos pos = CalcFilePos(result);
+        BlockPtr blk = buffer->getblock(MakeID(indexFile, pos.first));
+        blk->setoffset(pos.second + sizeof(unsigned long long));
+        Record record;
+        for (auto &a : schema->attrs) {
+            Value val;
+            val.type = a->vtype;
+            if (val.type == Type::CHAR) {
+                val.clen = a->clen;
+                val.ptr = new char[val.clen];
+            } else if (val.type == Type::INT) {
+                val.ptr = new int;
+            } else val.ptr = new float;
+            blk->read(val.ptr, val.size());
+            record.emplace_back(std::move(val));
+        }
+        bool flag = false;
+        for (auto &lim: limits) {
+            flag &= Constraint::valcmp(lim.op, record[lim.attridx], lim.val);
+            if (!flag) break;
+        }
+        retval.emplace_back(std::move(record));
+    }
+    return retval;
+}

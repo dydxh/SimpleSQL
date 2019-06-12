@@ -168,7 +168,7 @@ std::vector<Record> RecordManager::selecter(const Limits& limit) {
         bool reserved = true;
         for (auto &e : limit) {
             reserved &= Constraint::valcmp(e.op, record[e.attridx], e.val);
-            if (reserved == false) break;
+            if (!reserved) break;
         }
         if (reserved) retval.emplace_back(std::move(record));
     }
@@ -185,7 +185,6 @@ Value RecordManager::getVal(const char *columnName, unsigned long long roffset) 
     Value val;
     val.type = schema->name2attrs[std::string(columnName)]->vtype;
     val.ptr = ptr;
-    //TODO remove
 //    if(val.type == Type::INT) {
 //        std::cout << "int value: " << *((int *)ptr) << std::endl;
 //    } else if (val.type == Type::FLOAT) {

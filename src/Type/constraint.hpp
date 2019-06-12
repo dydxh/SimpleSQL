@@ -46,13 +46,9 @@ public:
     }
 };
 
-struct Indexlimit {
-    bool exist, isopen;
-    Value val;
-};
+
 
 using RawLimits = std::vector<RawConstraint>;
 using Limits = std::vector<Constraint>;
-using IndexLimits = std::vector<Indexlimit>;
 
 #endif
