@@ -59,6 +59,10 @@ void IndexManager::buildIndex() {
     }
 }
 
+void IndexManager::insertOne(unsigned long long roffset, unsigned long long foffset) {
+    bplusTree->insert(roffset, foffset);
+}
+
 unsigned long long IndexManager::findOne(Value &v) {
     unsigned long long ptr = bplusTree->findOne(v); // roffset
     //TODO:remove
@@ -85,6 +89,71 @@ std::vector<unsigned long long> IndexManager::findByRange(
 
 void IndexManager::removeOne(const Value &v) {
     bplusTree->remove(v);
+}
+
+void IndexManager::deleter(Limits &limit) {
+    int indexidx = schema->getidx(columnName);
+    bool flag = false;
+    std::vector<Constraint> indexlim;
+    for (auto &e : limit) {
+        if (indexidx == e.attridx) {
+            flag = true; // contains constraints on the indexed column
+            indexlim.push_back(e);
+        }
+    }
+    if (!flag) {
+        return; // no need to delete
+    } else {
+        // find & remove the constraints on left or right to get the records
+        // leftVal [<, <=] val [<, <=] rightVal or val == someVal
+        // the rest is then filtered out
+        bool wl, leq, wr, req, eq;
+        wl = leq = wr = req = eq = false; // no limits
+        Value l, r, eqval;
+        std::vector<unsigned long long> result;
+        unsigned long long temp;
+        for (auto &lim : indexlim) { // column is placed on the left of limit's operator
+            if (lim.op == Operator::EQ) {
+                eq = true;
+                eqval = lim.val;
+                break;
+            } else if (lim.op == Operator::GT || lim.op == Operator::GEQ) {
+                if (!wl) {
+                    l = lim.val;
+                    wl = true;
+                } else { // already sure there is lower bound
+                    if ((Value::valcmp(lim.val, l) == 0 && lim.op == Operator::GT)
+                        || (Value::valcmp(lim.val, l) > 0)) {
+                        l = lim.val;
+                        leq = lim.op == Operator::GEQ;
+                    }
+                }
+            } else if (lim.op == Operator::LT || lim.op == Operator::LEQ) {
+                if (!wr) {
+                    r = lim.val;
+                    wr = true;
+                } else { // already sure there is upper bound
+                    if ((Value::valcmp(lim.val, r) == 0 && lim.op == Operator::LT)
+                        || (Value::valcmp(lim.val, r) < 0)) {
+                        r = lim.val;
+                        req = lim.op == Operator::LEQ;
+                    }
+                }
+            }
+        }
+        // take the find results and translate them into records
+        if (eq) {
+            removeOne(eqval);
+        } else {
+            result = findByRange(
+                    wl, leq, l,
+                    wr, req, r
+            );
+            for (auto &a : result) {
+                removeOne(GETVAL(a));
+            }
+        }
+    }
 }
 
 void IndexManager::printRecord(unsigned long long ptr) {

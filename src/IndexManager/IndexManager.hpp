@@ -36,11 +36,13 @@ public:
     // ~IndexManager();
     void buildIndex();
 
+    void insertOne(unsigned long long roffset, unsigned long long foffset);
+
     unsigned long long findOne(Value &v);
 
     // try to delete the given value in the tree
     void removeOne(const Value &v);
-
+    void deleter(Limits &limits);
     std::vector<unsigned long long> findByRange(
             bool wl, bool leq, const Value &l,
             bool wr, bool req, const Value &r

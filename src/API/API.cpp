@@ -38,6 +38,10 @@ void API::dropTable(const std::string &schemaname) {
     if (RecordManager::recordbuf[schemaname]) {
         RecordManager::recordbuf[schemaname]->droptable();
     }
+    // drop all the indices associate with the table
+    for (auto &a : catalog->schema2indexes[schemaname]) {
+        catalog->dropIndex(a);
+    }
 }
 
 void API::createIndex(const std::string &indexname, const std::string &schemaname, const std::string &columname) {
@@ -103,8 +107,15 @@ void API::inserter(const std::string &schemaname, Record &record) {
             throw TypeError(msg);
         }
     }
-
     RecordManager::recordbuf[schemaname]->inserter(record);
+    // insert to index
+    if (catalog->schema2indexes.find(schema->header.name) != catalog->schema2indexes.end()) {
+        for (const auto &a : catalog->schema2indexes[std::string(schema->header.name)]) {
+            IndexPtr indexPtr = catalog->name2index[a];
+            auto temp = RecordManager::recordbuf[schemaname]->header.recordstart;
+            indexPtr->insertOne(temp + sizeof(unsigned long long) + schema->name2offset[indexPtr->columnName], temp);
+        }
+    }
 }
 
 int API::deleter(const std::string &schemaname, const RawLimits &rawlimits) {
@@ -120,11 +131,21 @@ int API::deleter(const std::string &schemaname, const RawLimits &rawlimits) {
     Limits limit = schema->translimits(rawlimits);
     checklimits(schema, limit);
 
+
     int retval = 0;
-    if (limit.empty() == true)
+    if (limit.empty()) {
         retval = RecordManager::recordbuf[schemaname]->deleteall();
-    else
+        // drop all the indices associate with the table
+        for (auto &a : catalog->schema2indexes[schemaname]) {
+            catalog->dropIndex(a);
+        }
+    } else {
         retval = RecordManager::recordbuf[schemaname]->deleter(limit);
+        // delete all the records in indices
+        for (auto &a : catalog->schema2indexes[schemaname]) {
+            catalog->name2index[a]->deleter(limit);
+        }
+    }
     return retval;
 }
 
