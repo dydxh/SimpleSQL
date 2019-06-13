@@ -46,7 +46,7 @@ void API::dropTable(const std::string &schemaname) {
 
 void API::createIndex(const std::string &indexname, const std::string &schemaname, const std::string &columname) {
     SchemaPtr schema = catalog->schemas[schemaname];
-    if (catalog->schema_exist(schemaname))
+    if (catalog->schema_exist(schemaname) == false)
         throw SchemaError("[Error] Schema '" + schemaname + "' doesn't exist.");
     if (catalog->schema_exist(indexname))
         throw SchemaError("[Error] Duplicate name of '" + indexname + "'.");
@@ -151,12 +151,17 @@ int API::deleter(const std::string &schemaname, const RawLimits &rawlimits) {
 
 std::vector<Record>
 API::selecter(const std::string &schemaname, const std::vector<std::string> &attrs, const RawLimits &rawlimits) {
-    if (catalog->index_exist(schemaname)) {
+    if (catalog->index_exist(schemaname))
         return selectbyindex(schemaname, attrs, rawlimits);
-    } else if (catalog->schema_exist(schemaname) == false) {
+    else
+        return selectbydefault(schemaname, attrs, rawlimits);
+}
+
+std::vector<Record>
+API::selectbydefault(const std::string &schemaname, const std::vector<std::string> &attrs, const RawLimits &rawlimits) {
+    if (!catalog->schema_exist(schemaname)) {
         throw CatalogError("[Error] Schema '" + schemaname + "' doesn't exist.");
     }
-
     SchemaPtr schema;
     if (RecordManager::recordexist(schemaname))
         schema = RecordManager::recordbuf[schemaname]->schema;
@@ -203,14 +208,15 @@ API::selectbyindex(const std::string &indexname, const std::vector<std::string> 
     }
     if (!flag) {
         std::cerr << "[WARNING] Must contains constraints on the indexed `" + index->columnName +
-                     "` column to speed up query.";
-        return selecter(indexname, attrs, rawlimits);
+                     "` column to speed up query." << std::endl;
+        // TODO: remove
+        std::cout << "Selecting from <- " << schema->header.name << std::endl;
+        return selectbydefault(std::string(schema->header.name), attrs, rawlimits);
     } else {
         // find & remove the constraints on left or right to get the records
         // leftVal [<, <=] val [<, <=] rightVal or val == someVal
         // the rest is then filtered out
         bool wl, leq, wr, req, eq;
-        wl = leq = wr = req = eq = false; // no limits
         Value l, r, eqval;
         std::vector<unsigned long long> result;
         unsigned long long temp;
@@ -324,10 +330,14 @@ void printval(const std::string &val, const int &maxlen) {
 
 void API::displaymsg(const std::string &schemaname, const std::vector<Record> &records,
                      const std::vector<std::string> &attrs) {
+    // if its a index name
+
     SchemaPtr schema;
     if (RecordManager::recordexist(schemaname))
         schema = RecordManager::recordbuf[schemaname]->schema;
-    else {
+    else if (catalog->index_exist(schemaname)){
+        schema = catalog->name2index[schemaname]->schema;
+    }else {
         RecordPtr recordmanager = std::make_shared<RecordManager>(catalog->buffer, catalog->schemas[schemaname]);
         RecordManager::recordbuf[schemaname] = recordmanager;
         schema = recordmanager->schema;

@@ -120,7 +120,7 @@ void CatalogManager::createTable(const std::string& schemaname, const int& idx, 
     tmpblk = buffer->getblock(MakeID(file, this->header.schemablk));
     tmpblk->setoffset(0);
     tmpblk->write(&(tmpschema->header), sizeof(tmpschema->header));
-
+    tmpschema->attrs[idx]->unique = 1;
     char tmpbuf[MAX_NAME_LEN];
     for(auto& e : tmpschema->attrs) {
         *((int *)tmpbuf) = e->getattr();
@@ -175,7 +175,7 @@ void CatalogManager::createIndex(const std::string& indexname, const std::string
 }
 
 void CatalogManager::dropIndex(const std::string& indexname) {
-    if(index_exist(indexname) == false) {
+    if(!index_exist(indexname)) {
         throw CatalogError("Index '" + indexname + "' doesn't exist.");
     }
     int offset = name2offset[indexname], tmpval = 1;

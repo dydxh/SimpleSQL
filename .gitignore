@@ -3,3 +3,5 @@ cmake-build-debug
 .DS_store
 .vscode
 build
+test.cpp
+a.out

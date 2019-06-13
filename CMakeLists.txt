@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.10)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_BUILD_TYPE Debug)
 
-find_package(BISON REQUIRED)
+find_package(BISON 3.0.0 REQUIRED)
 find_package(FLEX REQUIRED)
 
 BISON_TARGET(interpreter_parser
