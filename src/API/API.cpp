@@ -29,7 +29,7 @@ void API::createTable(const std::string &schemaname, const std::string &primaryk
     }
     catalog->createTable(schemaname, idx, attrs);
 
-    RecordPtr recordmanager = std::make_shared<RecordManager>(catalog->buffer, catalog, schemaname);
+    RecordPtr recordmanager = std::make_shared<RecordManager>(catalog->buffer, catalog->schemas[schemaname]);
     RecordManager::recordbuf[schemaname] = recordmanager;
 }
 
@@ -75,7 +75,7 @@ void API::inserter(const std::string &schemaname, Record &record) {
     if (RecordManager::recordexist(schemaname))
         schema = RecordManager::recordbuf[schemaname]->schema;
     else {
-        RecordPtr recordmanager = std::make_shared<RecordManager>(catalog->buffer, catalog, schemaname);
+        RecordPtr recordmanager = std::make_shared<RecordManager>(catalog->buffer, catalog->schemas[schemaname]);
         RecordManager::recordbuf[schemaname] = recordmanager;
         schema = recordmanager->schema;
     }
@@ -123,7 +123,7 @@ int API::deleter(const std::string &schemaname, const RawLimits &rawlimits) {
     if (RecordManager::recordexist(schemaname))
         schema = RecordManager::recordbuf[schemaname]->schema;
     else {
-        RecordPtr recordmanager = std::make_shared<RecordManager>(catalog->buffer, catalog, schemaname);
+        RecordPtr recordmanager = std::make_shared<RecordManager>(catalog->buffer, catalog->schemas[schemaname]);
         RecordManager::recordbuf[schemaname] = recordmanager;
         schema = recordmanager->schema;
     }
@@ -161,7 +161,7 @@ API::selecter(const std::string &schemaname, const std::vector<std::string> &att
     if (RecordManager::recordexist(schemaname))
         schema = RecordManager::recordbuf[schemaname]->schema;
     else {
-        RecordPtr recordmanager = std::make_shared<RecordManager>(catalog->buffer, catalog, schemaname);
+        RecordPtr recordmanager = std::make_shared<RecordManager>(catalog->buffer, catalog->schemas[schemaname]);
         RecordManager::recordbuf[schemaname] = recordmanager;
         schema = recordmanager->schema;
     }
@@ -328,7 +328,7 @@ void API::displaymsg(const std::string &schemaname, const std::vector<Record> &r
     if (RecordManager::recordexist(schemaname))
         schema = RecordManager::recordbuf[schemaname]->schema;
     else {
-        RecordPtr recordmanager = std::make_shared<RecordManager>(catalog->buffer, catalog, schemaname);
+        RecordPtr recordmanager = std::make_shared<RecordManager>(catalog->buffer, catalog->schemas[schemaname]);
         RecordManager::recordbuf[schemaname] = recordmanager;
         schema = recordmanager->schema;
     }

@@ -8,7 +8,7 @@
 #include "CatalogManager/CatalogManager.hpp"
 #include "RecordManager/RecordManager.hpp"
 #include "utils/ErrorManager.hpp"
-#include "IndexManger/IndexManager.hpp"
+#include "IndexManager/IndexManager.hpp"
 #include "API/API.hpp"
 #include "Interpreter/Driver.hpp"
 

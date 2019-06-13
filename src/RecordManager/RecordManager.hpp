@@ -8,7 +8,7 @@
 #include "../Type/constraint.hpp"
 #include "../BufferManager/BufferManager.hpp"
 #include "../FileManager/FileManager.hpp"
-#include "../CatalogManager/CatalogManager.hpp"
+#include "../CatalogManager/Schema.hpp"
 #include "Record.hpp"
 
 struct RecordFileHeader {
@@ -27,7 +27,7 @@ public:
     SchemaPtr schema;
     std::string schemaname;
 
-    RecordManager(const BufferPtr& buffer, const CatalogPtr& catalog, const std::string schemaname);
+    RecordManager(const BufferPtr& buffer, const SchemaPtr& schema);
     ~RecordManager();
 
     static bool recordexist(const std::string& schemaname);

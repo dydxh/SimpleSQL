@@ -9,11 +9,8 @@ auto CalcFilePos = [](const unsigned long long &pos) { return std::make_pair(pos
 
 std::map<std::string, std::shared_ptr<RecordManager>> RecordManager::recordbuf;
 
-RecordManager::RecordManager(const BufferPtr &buffer, const CatalogPtr &catalog, std::string schemaname) {
-    if (catalog->schema_exist(schemaname) == false) {
-        throw SchemaError("[Error] Schema " + schemaname + " doesn't exist.");
-    }
-    this->schema = catalog->schemas[schemaname];
+RecordManager::RecordManager(const BufferPtr &buffer, const SchemaPtr& schema) {
+    this->schema = schema;
     this->buffer = buffer;
     this->schemaname = schemaname;
     std::string filename = FILENAME_PREFIX + schemaname + "-" + CATALOG_NAME;

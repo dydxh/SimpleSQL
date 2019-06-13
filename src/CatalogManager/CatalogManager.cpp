@@ -87,7 +87,7 @@ void CatalogManager::readbody() {
             curblk = tmpheader.nextblk;
             continue;
         }
-        IndexPtr tmpptr = std::make_shared<IndexManager>(this->buffer, tmpheader.indexname, tmpheader.schemaname, tmpheader.columnname);
+        IndexPtr tmpptr = std::make_shared<IndexManager>(this->buffer, tmpheader.indexname, schemas[tmpheader.schemaname], tmpheader.columnname);
 
         nextblk = tmpheader.nextblk;
         name2index[std::string(tmpheader.indexname)] = tmpptr;
@@ -148,7 +148,7 @@ void CatalogManager::dropTable(const std::string& schemaname) {
 }
 
 void CatalogManager::createIndex(const std::string& indexname, const std::string& schemaname, const std::string& columname) {
-    IndexPtr indexptr = std::make_shared<IndexManager>(this->buffer, indexname, schemaname, columname);
+    IndexPtr indexptr = std::make_shared<IndexManager>(this->buffer, indexname, schemas[schemaname], columname);
 
     //modify catalog file header and write index header to file
     IndexHeader tmpheader;
