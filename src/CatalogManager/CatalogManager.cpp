@@ -149,7 +149,7 @@ void CatalogManager::dropTable(const std::string& schemaname) {
 
 void CatalogManager::createIndex(const std::string& indexname, const std::string& schemaname, const std::string& columname) {
     IndexPtr indexptr = std::make_shared<IndexManager>(this->buffer, indexname, schemas[schemaname], columname);
-
+    indexptr->buildIndex();
     //modify catalog file header and write index header to file
     IndexHeader tmpheader;
     tmpheader.nextblk = this->header.indexblk;

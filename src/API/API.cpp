@@ -46,7 +46,7 @@ void API::dropTable(const std::string &schemaname) {
 
 void API::createIndex(const std::string &indexname, const std::string &schemaname, const std::string &columname) {
     SchemaPtr schema = catalog->schemas[schemaname];
-    if (catalog->schema_exist(schemaname) == false)
+    if (!catalog->schema_exist(schemaname))
         throw SchemaError("[Error] Schema '" + schemaname + "' doesn't exist.");
     if (catalog->schema_exist(indexname))
         throw SchemaError("[Error] Duplicate name of '" + indexname + "'.");
@@ -217,6 +217,7 @@ API::selectbyindex(const std::string &indexname, const std::vector<std::string> 
         // leftVal [<, <=] val [<, <=] rightVal or val == someVal
         // the rest is then filtered out
         bool wl, leq, wr, req, eq;
+        wl = leq = wr = req = eq = false;
         Value l, r, eqval;
         std::vector<unsigned long long> result;
         unsigned long long temp;
@@ -263,25 +264,6 @@ API::selectbyindex(const std::string &indexname, const std::vector<std::string> 
         // filter the records with the rest of the constraints
         return index->translateAndFilter(result, limit);
     }
-
-    //transfer limits
-
-    std::vector<int> idxs;
-    if (attrs.empty()) {
-        for (int i = 0; i < schema->attrs.size(); i++)
-            idxs.push_back(i);
-    } else {
-        for (auto &e : attrs) {
-            int idx = schema->getidx(e);
-            if (idx == -1) throw AttributeError("[Error] Attribute '" + e + "' doesn't exist.");
-            else idxs.push_back(idx);
-        }
-    }
-
-    std::vector<Record> retval;
-    // retval = RecordManager::project(index->selecter(limit), idxs);
-    //get retval by limits
-    return retval;
 }
 
 void API::execfile(const std::string &filename) {

@@ -192,19 +192,24 @@ std::vector<Record> IndexManager::translateAndFilter(
     std::vector<Record> retval;
     for (unsigned long long result : results) {
         FilePos pos = CalcFilePos(result);
-        BlockPtr blk = buffer->getblock(MakeID(indexFile, pos.first));
+        BlockPtr blk = buffer->getblock(MakeID(recordManager->file, pos.first));
         blk->setoffset(pos.second + sizeof(unsigned long long));
         Record record;
         for (auto &a : schema->attrs) {
             Value val;
-            val.type = a->vtype;
-            if (val.type == Type::CHAR) {
-                val.clen = a->clen;
-                val.ptr = new char[val.clen];
-            } else if (val.type == Type::INT) {
+            if (a->vtype == Type::CHAR) {
+                val.type = Type::CHAR;
+                val.ptr = new char[a->clen];
+                blk->read(val.ptr, a->size());
+            } else if (a->vtype == Type::FLOAT) {
+                val.type = Type::FLOAT;
+                val.ptr = new float;
+                blk->read(val.ptr, a->size());
+            } else {
+                val.type = Type::INT;
                 val.ptr = new int;
-            } else val.ptr = new float;
-            blk->read(val.ptr, val.size());
+                blk->read(val.ptr, a->size());
+            }
             record.emplace_back(std::move(val));
         }
         bool flag = false;
