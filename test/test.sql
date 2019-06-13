@@ -14,16 +14,19 @@ insert into student2 values(1080100006,'name6',89.5);
 insert into student2 values(1080100007,'name7',63);
 
 
-select * from student2 where score = 90.0;--QAQOvO fdafs select
+-- select * from student2 where score = 90.0;--QAQOvO fdafs select
 
 
 
-select id, score, name from student2 where score >= 90.0;--QAQOvO fdafs 
+-- select id, score, name from student2 where score >= 90.0;--QAQOvO fdafs 
 
 
 create index xxx on student2(id);
 
 select * from xxx;
 
-select id from xxx;
+select * from xxx;
+select id, name from xxx;
+
+-- select id from xxx;
 -- drop table student2;

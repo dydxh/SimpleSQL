@@ -16,7 +16,12 @@ IndexManager::IndexManager(const BufferPtr &buffer, const std::string &indexname
     this->buffer = buffer;
     this->columnName = colName;
     this->schema = schema;
-    this->recordManager = RecordManager::recordbuf[schema->header.name];
+    if(RecordManager::recordexist(schema->header.name))
+        this->recordManager = RecordManager::recordbuf[schema->header.name];
+    else {
+        this->recordManager = std::make_shared<RecordManager>(buffer, schema);
+        RecordManager::recordbuf[schema->header.name] = this->recordManager;
+    }
 
     std::string filename = FILENAME_PREFIX + indexname + "-indexon-" + colName + "-of-" + schema->header.name;
 

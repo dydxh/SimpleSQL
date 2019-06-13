@@ -344,7 +344,7 @@ void API::displaymsg(const std::string &schemaname, const std::vector<Record> &r
     }
 
     std::vector<int> idxs;
-    RecordPtr tmpptr = RecordManager::recordbuf[schemaname];
+    RecordPtr tmpptr = RecordManager::recordbuf[std::string(schema->header.name)];
     if (attrs.empty()) {
         for (int i = 0; i < schema->attrs.size(); i++)
             idxs.push_back(i);
