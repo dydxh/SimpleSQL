@@ -90,7 +90,7 @@ create_table_stmt: CREATE TABLE IDENTIFIER LPAREN attribute_decl_list COMMA PRIM
 
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
+        std::cout << "Elapsed time: " << elapsed.count() << " seconds." << std::endl;
     }
     ;
 
@@ -132,7 +132,7 @@ drop_table_stmt: DROP TABLE IDENTIFIER {
 
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
+        std::cout << "Elapsed time: " << elapsed.count() << " seconds." << std::endl;
     }
     ;
 
@@ -144,7 +144,7 @@ create_index_stmt: CREATE INDEX IDENTIFIER ON IDENTIFIER LPAREN IDENTIFIER RPARE
 
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
+        std::cout << "Elapsed time: " << elapsed.count() << " seconds." << std::endl;
     }
     ;
 
@@ -156,7 +156,7 @@ drop_index_stmt: DROP INDEX IDENTIFIER {
 
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
+        std::cout << "Elapsed time: " << elapsed.count() << " seconds." << std::endl;
     }
     ;
 
@@ -169,7 +169,7 @@ select_stmt: SELECT attribute_list FROM IDENTIFIER {
 
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
+        std::cout << "Elapsed time: " << elapsed.count() << " seconds." << std::endl;
     }
     | SELECT attribute_list FROM IDENTIFIER WHERE constraint_list {
         auto start = std::chrono::high_resolution_clock::now();
@@ -180,7 +180,7 @@ select_stmt: SELECT attribute_list FROM IDENTIFIER {
 
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
+        std::cout << "Elapsed time: " << elapsed.count() << " seconds." << std::endl;
     }
     | SELECT STAR FROM IDENTIFIER {
         auto start = std::chrono::high_resolution_clock::now();
@@ -191,7 +191,7 @@ select_stmt: SELECT attribute_list FROM IDENTIFIER {
 
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
+        std::cout << "Elapsed time: " << elapsed.count() << " seconds." << std::endl;
     }
     | SELECT STAR FROM IDENTIFIER WHERE constraint_list {
         auto start = std::chrono::high_resolution_clock::now();
@@ -202,7 +202,7 @@ select_stmt: SELECT attribute_list FROM IDENTIFIER {
 
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
+        std::cout << "Elapsed time: " << elapsed.count() << " seconds." << std::endl;
     }
     ;
 
@@ -277,7 +277,7 @@ insert_stmt: INSERT INTO IDENTIFIER VALUES LPAREN value_list RPAREN {
 
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
+        std::cout << "Elapsed time: " << elapsed.count() << " seconds." << std::endl;
     }
     ;
 
@@ -299,7 +299,7 @@ delete_stmt: DELETE FROM IDENTIFIER {
 
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
+        std::cout << "Elapsed time: " << elapsed.count() << " seconds." << std::endl;
     }
     | DELETE FROM IDENTIFIER WHERE constraint_list {
         auto start = std::chrono::high_resolution_clock::now();
@@ -309,7 +309,7 @@ delete_stmt: DELETE FROM IDENTIFIER {
 
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
+        std::cout << "Elapsed time: " << elapsed.count() << " seconds." << std::endl;
     }
     ;
 
@@ -327,7 +327,7 @@ execfile_stmt: EXECFILE STRING {
 
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
+        std::cout << "Elapsed time: " << elapsed.count() << " seconds." << std::endl;
     }
     ;
 
