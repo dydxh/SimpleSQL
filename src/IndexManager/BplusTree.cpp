@@ -64,7 +64,7 @@ unsigned long long BplusTree::findOne(Value v) {
     for (int i = 0; i < nodeBuffer->size; i++) {
         if (0 == Value::valcmp(GETVAL(nodeBuffer->roffset[i]), v)) {
             // return the offset(ptr) of the record
-            return nodeBuffer->roffset[i];
+            return nodeBuffer->foffset[i];
         }
     }
     return 0;
@@ -147,8 +147,7 @@ bool BplusTree::insert(unsigned long long roffset, unsigned long long foffset) {
                 WRITE_BACK_NODE_BUF(blk, nodeBuffer);
                 return true; // insertion complete
             } else if (0 == Value::valcmp(GETVAL(nodeBuffer->roffset[i - 1]), v)) {
-                // TODO: remove
-                std::cout << "[TEST][WARNING]: duplicate value encountered, ignoring" << std::endl;
+                std::cerr << "[WARNING]: duplicate value encountered, ignoring" << std::endl;
                 return false; // duplicate value
             } else {
                 nodeBuffer->roffset[i] = nodeBuffer->roffset[i - 1];

@@ -209,7 +209,6 @@ API::selectbyindex(const std::string &indexname, const std::vector<std::string> 
     if (!flag) {
         std::cerr << "[WARNING] Must contains constraints on the indexed `" + index->columnName +
                      "` column to speed up query." << std::endl;
-        // TODO: remove
         std::cout << "Selecting from <- " << schema->header.name << std::endl;
         return selectbydefault(std::string(schema->header.name), attrs, rawlimits);
     } else {
