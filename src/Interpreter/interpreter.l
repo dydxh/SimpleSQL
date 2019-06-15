@@ -34,56 +34,50 @@ NQUOTE [^']
     yylval = lval;
 %}
 
-"int"      {std::cout << yytext; return token::INT;}
-"float"    {std::cout << yytext; return token::FLOAT;}
-"and"      {std::cout << yytext; return token::AND;}
-"char"     {std::cout << yytext; return token::CHAR;}
-"create"   {std::cout << yytext; return token::CREATE;}
-"delete"   {std::cout << yytext; return token::DELETE;}
-"drop"     {std::cout << yytext; return token::DROP;}
-"execfile" {std::cout << yytext; return token::EXECFILE;}
-"from"     {std::cout << yytext; return token::FROM;}
-"index"    {std::cout << yytext; return token::INDEX;}
-"insert"   {std::cout << yytext; return token::INSERT;}
-"into"     {std::cout << yytext; return token::INTO;}
-"key"      {std::cout << yytext; return token::KEY;}
-"on"       {std::cout << yytext; return token::ON;}
-"primary"  {std::cout << yytext; return token::PRIMARY;}
-"quit"     {std::cout << yytext; return token::QUIT;}
-"select"   {std::cout << yytext; return token::SELECT;}
-"table"    {std::cout << yytext; return token::TABLE;}
-"unique"   {std::cout << yytext; return token::UNIQUE;}
-"values"   {std::cout << yytext; return token::VALUES;}
-"where"    {std::cout << yytext; return token::WHERE;}
+"int"      {return token::INT;}
+"float"    {return token::FLOAT;}
+"and"      {return token::AND;}
+"char"     {return token::CHAR;}
+"create"   {return token::CREATE;}
+"delete"   {return token::DELETE;}
+"drop"     {return token::DROP;}
+"execfile" {return token::EXECFILE;}
+"from"     {return token::FROM;}
+"index"    {return token::INDEX;}
+"insert"   {return token::INSERT;}
+"into"     {return token::INTO;}
+"key"      {return token::KEY;}
+"on"       {return token::ON;}
+"primary"  {return token::PRIMARY;}
+"quit"     {return token::QUIT;}
+"select"   {return token::SELECT;}
+"table"    {return token::TABLE;}
+"unique"   {return token::UNIQUE;}
+"values"   {return token::VALUES;}
+"where"    {return token::WHERE;}
 
 [+|-][0-9]+      {
-        std::cout << "Sign Integer: " << yytext;
         yylval->build<int>(std::stoi(yytext));
         return token::INTEGER;
     }
 [0-9]+      {
-        std::cout << "Integer: " << yytext;
         yylval->build<int>(std::stoi(yytext));
         return token::INTEGER;
     }
 [+|-][0-9]+"."[0-9]+   {
-        std::cout << "Sign Float: " << yytext;
         yylval->build<float>(std::stod(yytext));
         return token::REALNUMBER;
     }
 [0-9]+"."[0-9]+   {
-        std::cout << "Float: " << yytext;
         yylval->build<float>(std::stod(yytext));
         return token::REALNUMBER;
     }
 '({NQUOTE}|'')+'  {
         yytext[yyleng - 1] = 0;
         yylval->build<std::string>(std::string(yytext + 1));
-        std::cout << "STRING: " << std::string(yytext + 1);
         return token::STRING;
     }
 [a-zA-Z]([a-zA-Z0-9])*  {
-        std::cout << "[" << yytext << "]";
         yytext[yyleng] = 0;
         yylval->build<std::string>(std::string(yytext));
         return token::IDENTIFIER;
@@ -103,19 +97,19 @@ NQUOTE [^']
     }
 }
 
-"("         {std::cout << yytext; return token::LPAREN;}
-")"         {std::cout << yytext; return token::RPAREN;}
-";"         {std::cout << yytext << std::endl; return token::SEMICOLON;}
-","         {std::cout << yytext; return token::COMMA;}
-"="         {std::cout << yytext; return token::EQ;}
-"<"         {std::cout << yytext; return token::LT;}
-"<="        {std::cout << yytext; return token::LE;}
-"<>"        {std::cout << yytext; return token::NE;}
-">"         {std::cout << yytext; return token::GT;}
-">="        {std::cout << yytext; return token::GE;}
-"*"         {std::cout << yytext; return token::STAR;}
+"("         {return token::LPAREN;}
+")"         {return token::RPAREN;}
+";"         {return token::SEMICOLON;}
+","         {return token::COMMA;}
+"="         {return token::EQ;}
+"<"         {return token::LT;}
+"<="        {return token::LE;}
+"<>"        {return token::NE;}
+">"         {return token::GT;}
+">="        {return token::GE;}
+"*"         {return token::STAR;}
 
-[ \t\f]    {std::cout << ' '; continue;}
+[ \t\f]    {continue;}
 
 [\n\r]     {std::cout << std::endl << "[mystery]> "; loc->lines();}
 

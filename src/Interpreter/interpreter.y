@@ -15,6 +15,7 @@
     #include <memory>
     #include <string>
     #include <stdexcept>
+    #include <chrono>
     namespace interpreter {
         class Scanner;
         class Driver;
@@ -82,8 +83,14 @@ sqlstmt: create_table_stmt
     ;
 
 create_table_stmt: CREATE TABLE IDENTIFIER LPAREN attribute_decl_list COMMA PRIMARY KEY LPAREN IDENTIFIER RPAREN RPAREN {
+        auto start = std::chrono::high_resolution_clock::now();
+
         API::createTable($3, $10, $5);
         std::cout << "Create table '" << $3 << "' successfully." << std::endl;
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
     }
     ;
 
@@ -118,42 +125,84 @@ attribute_type: INT {
     ;
 
 drop_table_stmt: DROP TABLE IDENTIFIER {
+        auto start = std::chrono::high_resolution_clock::now();
+
         API::dropTable($3);
         std::cout << "Drop table '" << $3 << "' successfully." << std::endl;
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
     }
     ;
 
 create_index_stmt: CREATE INDEX IDENTIFIER ON IDENTIFIER LPAREN IDENTIFIER RPAREN {
+        auto start = std::chrono::high_resolution_clock::now();
+
         API::createIndex($3, $5, $7);
         std::cout << "Create index '" << $3 << "' successfully." << std::endl;
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
     }
     ;
 
 drop_index_stmt: DROP INDEX IDENTIFIER {
+        auto start = std::chrono::high_resolution_clock::now();
+
         API::dropIndex($3);
         std::cout << "Drop index '" << $3 << "' successfully." << std::endl;
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
     }
     ;
 
 select_stmt: SELECT attribute_list FROM IDENTIFIER {
+        auto start = std::chrono::high_resolution_clock::now();
+
         auto e = API::selecter($4, $2);
         API::displaymsg($4, e, $2);
         std::cout << "Select operation complete, got " << e.size() << " row(s) data." << std::endl;
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
     }
     | SELECT attribute_list FROM IDENTIFIER WHERE constraint_list {
+        auto start = std::chrono::high_resolution_clock::now();
+
         auto e = API::selecter($4, $2, $6);
         API::displaymsg($4, e, $2);
         std::cout << "Select operation complete, got " << e.size() << " row(s) data." << std::endl;
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
     }
     | SELECT STAR FROM IDENTIFIER {
+        auto start = std::chrono::high_resolution_clock::now();
+
         auto e = API::selecter($4);
         API::displaymsg($4, e);
         std::cout << "Select operation complete, got " << e.size() << " row(s) data." << std::endl;
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
     }
     | SELECT STAR FROM IDENTIFIER WHERE constraint_list {
+        auto start = std::chrono::high_resolution_clock::now();
+
         auto e = API::selecter($4, std::vector<std::string>(), $6);
         API::displaymsg($4, e);
         std::cout << "Select operation complete, got " << e.size() << " row(s) data." << std::endl;
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
     }
     ;
 
@@ -221,8 +270,14 @@ value: INTEGER {
     ;
 
 insert_stmt: INSERT INTO IDENTIFIER VALUES LPAREN value_list RPAREN {
+        auto start = std::chrono::high_resolution_clock::now();
+
         API::inserter($3, $6);
         std::cout << "Insert operation complete." << std::endl;
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
     }
     ;
 
@@ -237,12 +292,24 @@ value_list: value_list COMMA value {
     ;
 
 delete_stmt: DELETE FROM IDENTIFIER {
+        auto start = std::chrono::high_resolution_clock::now();
+
         int e = API::deleter($3);
         std::cout << "Delete " << e << " row(s) data." << std::endl;
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
     }
     | DELETE FROM IDENTIFIER WHERE constraint_list {
+        auto start = std::chrono::high_resolution_clock::now();
+
         int e = API::deleter($3, $5);
         std::cout << "Delete " << e << " row(s) data." << std::endl;
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
     }
     ;
 
@@ -253,8 +320,14 @@ quit_stmt: QUIT {
     ;
 
 execfile_stmt: EXECFILE STRING {
+        auto start = std::chrono::high_resolution_clock::now();
+
         API::execfile($2);
         std::cout << "File execution complete." << std::endl;
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Elapsed time: " << elapsed.count() / CLOCKS_PER_SEC << " seconds." << std::endl;
     }
     ;
 
