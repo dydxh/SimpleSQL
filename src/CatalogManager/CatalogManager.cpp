@@ -63,9 +63,14 @@ void CatalogManager::readbody() {
 
             tmpschema->attrs.push_back(tmpptr);
             tmpschema->name2attrs[tmpptr->name] = tmpptr;
+            
+            if(i == 0) {
+                tmpschema->idx2offset.push_back(0);
+            }
             int offset = tmpptr->size();
-            if (i != 0)
-                offset += tmpschema->idx2offset[i - 1];
+            if (i != 0) {
+                offset += tmpschema->idx2offset[i];
+            }
             tmpschema->idx2offset.push_back(offset);
             tmpschema->name2offset[tmpptr->name] = tmpschema->idx2offset[i];
         }
@@ -126,11 +131,24 @@ CatalogManager::createTable(const std::string &schemaname, const int &idx, const
     tmpblk->write(&(tmpschema->header), sizeof(tmpschema->header));
     tmpschema->attrs[idx]->unique = 1;
     char tmpbuf[MAX_NAME_LEN];
+
+    int i = 0;
     for (auto &e : tmpschema->attrs) {
         *((int *) tmpbuf) = e->getattr();
         tmpblk->write(&tmpbuf, sizeof(int));
         memcpy(tmpbuf, e->name.c_str(), MAX_NAME_LEN);
         tmpblk->write(tmpbuf, MAX_NAME_LEN);
+
+        if(i == 0) {
+            tmpschema->idx2offset.push_back(0);
+        }
+        int offset = e->size();
+        if (i != 0) {
+            offset += tmpschema->idx2offset[i];
+        }
+        tmpschema->idx2offset.push_back(offset);
+        tmpschema->name2offset[e->name] = tmpschema->idx2offset[i];
+        i++;
     }
     schemas[schemaname] = tmpschema;
     name2offset[schemaname] = this->header.schemablk;

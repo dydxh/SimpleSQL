@@ -64,7 +64,7 @@ unsigned long long BplusTree::findOne(Value v) {
     for (int i = 0; i < nodeBuffer->size; i++) {
         if (0 == Value::valcmp(GETVAL(nodeBuffer->roffset[i]), v)) {
             // return the offset(ptr) of the record
-            return nodeBuffer->foffset[i];
+            return nodeBuffer->roffset[i];
         }
     }
     return 0;

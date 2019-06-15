@@ -74,9 +74,10 @@ void IndexManager::insertOne(unsigned long long roffset, unsigned long long foff
 unsigned long long IndexManager::findOne(Value &v) {
     unsigned long long ptr = bplusTree->findOne(v); // roffset
     //TODO:remove
-    std::cout << " >>> ";
-    printRecord(ptr);
-    return ptr;
+    // std::cout << " >>> ";
+    // printRecord(ptr);
+    printRecord(ptr - sizeof(unsigned long long) - schema->name2offset[columnName]);
+    return ptr - sizeof(unsigned long long) - schema->name2offset[columnName];
 }
 
 std::vector<unsigned long long> IndexManager::findByRange(
