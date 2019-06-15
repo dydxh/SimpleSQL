@@ -39,9 +39,9 @@ void API::dropTable(const std::string &schemaname) {
         RecordManager::recordbuf[schemaname]->droptable();
     }
     // drop all the indices associate with the table
-    for (auto &a : catalog->schema2indexes[schemaname]) {
-        catalog->dropIndex(a);
-    }
+//    for (auto &a : catalog->schema2indexes[schemaname]) {
+////        catalog->dropIndex(a);
+////    }
 }
 
 void API::createIndex(const std::string &indexname, const std::string &schemaname, const std::string &columname) {

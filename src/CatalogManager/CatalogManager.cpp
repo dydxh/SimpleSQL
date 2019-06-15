@@ -183,9 +183,11 @@ void CatalogManager::dropIndex(const std::string& indexname) {
     tmpblk->setoffset(4);
     tmpblk->write(&tmpval, sizeof(tmpval));
     name2index[indexname]->indexFile->setdelete();
-    name2index.erase(indexname);
-    name2offset.erase(indexname);
 
-    std::string schemaname = name2index[indexname]->header.schemaname;
-    schema2indexes[schemaname].erase(std::find(schema2indexes[schemaname].begin(), schema2indexes[schemaname].end(), indexname));
+    std::string schemaname = name2index[indexname]->schema->header.name;
+    auto aa = std::find(schema2indexes[schemaname].begin(), schema2indexes[schemaname].end(), indexname);
+
+    schema2indexes[schemaname].erase(aa);
+    name2offset.erase(indexname);
+    name2index.erase(indexname);
 }
