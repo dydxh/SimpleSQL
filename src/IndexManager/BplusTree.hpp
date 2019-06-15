@@ -40,16 +40,18 @@ class BplusTree {
 
     std::vector<BlockPtr> stack;
     std::vector<int> stackPos;
-    int now = -1; // TODO: what happened to now?
+    int now = -1; //
     // External dependencies
-    BlockPtr root = 0;
+    BlockPtr root = nullptr;
     FilePtr fileManager; // for the index file
     BufferPtr bufferManager;
     RecordPtr recordManager;
     std::string columnName;
 public:
-    BplusTree(const FilePtr &filePtr, const BufferPtr &buffer, const RecordPtr &record, BlockPtr root,
-              std::string columnName);
+    BplusTree(
+            const FilePtr &filePtr, const BufferPtr &buffer,
+            const RecordPtr &record, BlockPtr root,
+            std::string columnName, bool newTree);
 
     BlockPtr createNode() {
         int blockId = fileManager->allocblock();
@@ -60,24 +62,28 @@ public:
     /* ------------------------------------- */
     BlockPtr findLeftMostNode();
 
-    BlockPtr findNode(const Value& v);
+    BlockPtr findNode(const Value &v);
 
     unsigned long long findOne(Value v);
 
     int findByRange(
-            bool wl, bool leq, const Value& l,
-            bool wr, bool req, const Value& r,
-            const BpRangeConsumer& consumer
+            bool wl, bool leq, const Value &l,
+            bool wr, bool req, const Value &r,
+            const BpRangeConsumer &consumer
     );
 
-    bool remove(const Value& v);
+    bool remove(const Value &v);
 
     void removeForm();
 
     // insert just record the offset to make it easy to maintain
     bool insert(unsigned long long roffset, unsigned long long foffset);
 
-    void insertInto(unsigned long long roffset, const BlockPtr& nextBlock);
+    void insertInto(unsigned long long roffset, const BlockPtr &nextBlock);
+
+    int getRootNum() {
+        return root->blocknumber();
+    }
 };
 
 using BplusPtr = std::shared_ptr<BplusTree>;

@@ -1,7 +1,4 @@
 #include <utility>
-
-#include <utility>
-
 //
 // Created by Henry Little on 2019-06-08.
 //
@@ -12,11 +9,12 @@ using FilePos = std::pair<int, int>;
 auto CalcFilePos = [](const unsigned long long &pos) { return std::make_pair(pos / BLOCK_SIZE, pos % BLOCK_SIZE); };
 
 IndexManager::IndexManager(const BufferPtr &buffer, const std::string &indexname, const SchemaPtr &schema,
-                           const std::string colName) {
+                           const std::string colName, IndexHeader header) {
     this->buffer = buffer;
     this->columnName = colName;
     this->schema = schema;
-    if(RecordManager::recordexist(schema->header.name))
+    this->header = header;
+    if (RecordManager::recordexist(schema->header.name))
         this->recordManager = RecordManager::recordbuf[schema->header.name];
     else {
         this->recordManager = std::make_shared<RecordManager>(buffer, schema);
@@ -26,19 +24,22 @@ IndexManager::IndexManager(const BufferPtr &buffer, const std::string &indexname
     std::string filename = FILENAME_PREFIX + indexname + "-indexon-" + colName + "-of-" + schema->header.name;
 
     if (FileManager::filexist(filename.c_str())) {
-        indexFile = std::make_shared<FileManager>(filename.c_str());
+        this->indexFile = std::make_shared<FileManager>(filename.c_str());
+        this->bplusTree = std::make_shared<BplusTree>(
+                indexFile, buffer, recordManager,
+                buffer->getblock(MakeID(indexFile, header.treeRoot)),
+                columnName, false
+        );
     } else {
         FileManager::createfile(filename.c_str());
         this->indexFile = std::make_shared<FileManager>(filename.c_str());
         FileManager::filebuf[filename] = indexFile;
-        // assert(indexFile->allocblock() == 0);
-        // TODO: write the file header
+        this->bplusTree = std::make_shared<BplusTree>(
+                indexFile, buffer, recordManager,
+                buffer->getblock(MakeID(indexFile, indexFile->allocblock())),
+                columnName, true
+        );
     }
-    this->bplusTree = std::make_shared<BplusTree>(
-            indexFile, buffer, recordManager,
-            buffer->getblock(MakeID(indexFile, indexFile->allocblock())),
-            columnName
-    );
 
 }
 
@@ -62,6 +63,8 @@ void IndexManager::buildIndex() {
         tmpblk->read(&ptr, sizeof(unsigned long long));
         //std::cout << "Next Ptr: " << ptr << std::endl;
     }
+    // store the root of the tree
+    this->header.treeRoot = bplusTree->getRootNum();
 }
 
 void IndexManager::insertOne(unsigned long long roffset, unsigned long long foffset) {
@@ -71,8 +74,9 @@ void IndexManager::insertOne(unsigned long long roffset, unsigned long long foff
 unsigned long long IndexManager::findOne(Value &v) {
     unsigned long long ptr = bplusTree->findOne(v); // roffset
     //TODO:remove
-    printRecord(ptr - sizeof(unsigned long long) - schema->name2offset[columnName]);
-    return ptr - sizeof(unsigned long long) - schema->name2offset[columnName];
+    std::cout << " >>> ";
+    printRecord(ptr);
+    return ptr;
 }
 
 std::vector<unsigned long long> IndexManager::findByRange(

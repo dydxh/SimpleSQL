@@ -182,13 +182,6 @@ Value RecordManager::getVal(const char *columnName, unsigned long long roffset) 
     Value val;
     val.type = schema->name2attrs[std::string(columnName)]->vtype;
     val.ptr = ptr;
-//    if(val.type == Type::INT) {
-//        std::cout << "int value: " << *((int *)ptr) << std::endl;
-//    } else if (val.type == Type::FLOAT) {
-//        std::cout << "float value: " << *((float *)ptr) << std::endl;
-//    } else {
-//        std::cout << "char value: " << *((char *)ptr) << std::endl;
-//    }
     if (val.type == Type::CHAR) {
         val.clen = schema->name2attrs[std::string(columnName)]->clen;
     }

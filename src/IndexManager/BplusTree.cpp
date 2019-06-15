@@ -5,19 +5,21 @@
 
 
 BplusTree::BplusTree(const FilePtr &filePtr, const BufferPtr &buffer, const RecordPtr &record, const BlockPtr root,
-                     const std::string columnName) {
+                     const std::string columnName, bool newTree) {
     this->fileManager = filePtr;
     this->bufferManager = buffer;
     this->recordManager = record;
     this->root = root;
     this->columnName = columnName;
-    // Initialize root node
-    auto nodeBuffer = new BasicNode;
-    READ_NODE_BUF(root, nodeBuffer);
-    NEXT_NODE(nodeBuffer) = 0;
-    nodeBuffer->isLeaf = 1;
-    nodeBuffer->size = 0;
-    WRITE_BACK_NODE_BUF(root, nodeBuffer);
+    if (newTree) {
+        // Initialize root node
+        auto nodeBuffer = new BasicNode;
+        READ_NODE_BUF(root, nodeBuffer);
+        NEXT_NODE(nodeBuffer) = 0;
+        nodeBuffer->isLeaf = 1;
+        nodeBuffer->size = 0;
+        WRITE_BACK_NODE_BUF(root, nodeBuffer);
+    }
 }
 
 
@@ -30,7 +32,8 @@ BlockPtr BplusTree::findNode(const Value &v) {
     BlockPtr blk = root;
     READ_NODE_BUF(blk, nodeBuffer);
     while (nodeBuffer->size != 0 && nodeBuffer->isLeaf != 1) {
-        stack.push_back(blk);now++;
+        stack.push_back(blk);
+        now++;
         if (Value::valcmp(GETVAL(nodeBuffer->roffset[nodeBuffer->size - 1]), v) <= 0) {
             // val[size - 1] <= v
             stackPos.push_back(nodeBuffer->size);
@@ -61,7 +64,7 @@ unsigned long long BplusTree::findOne(Value v) {
     for (int i = 0; i < nodeBuffer->size; i++) {
         if (0 == Value::valcmp(GETVAL(nodeBuffer->roffset[i]), v)) {
             // return the offset(ptr) of the record
-            return nodeBuffer->roffset[i];
+            return nodeBuffer->foffset[i];
         }
     }
     return 0;
@@ -226,7 +229,7 @@ bool BplusTree::insert(unsigned long long roffset, unsigned long long foffset) {
     return true;
 }
 
-void BplusTree::insertInto(unsigned long long roffset, const BlockPtr& nextBlock) {
+void BplusTree::insertInto(unsigned long long roffset, const BlockPtr &nextBlock) {
     if (now == -1) { // root
         BlockPtr rootblk = createNode(); // the new root node
         auto rootNodeBuffer = new BasicNode;
@@ -325,7 +328,7 @@ void BplusTree::insertInto(unsigned long long roffset, const BlockPtr& nextBlock
     }
 }
 
-bool BplusTree::remove(const Value& v) {
+bool BplusTree::remove(const Value &v) {
     BlockPtr blk = findNode(v);
     auto nodeBuffer = new BasicNode;
     READ_NODE_BUF(blk, nodeBuffer);

@@ -14,7 +14,7 @@
 #include "./BplusTree.hpp"
 
 struct IndexHeader {
-    int nextblk, deleted;
+    int nextblk, deleted, treeRoot;
     char indexname[MAX_NAME_LEN];
     char schemaname[MAX_NAME_LEN];
     char columnname[MAX_NAME_LEN];
@@ -31,7 +31,10 @@ public:
 
     BplusPtr bplusTree;
 
-    IndexManager(const BufferPtr &buffer, const std::string &indexname, const SchemaPtr &schema, std::string colName);
+    IndexManager(
+            const BufferPtr &buffer, const std::string &indexname,
+            const SchemaPtr &schema, std::string colName,
+            IndexHeader indexHeader);
 
     // ~IndexManager();
     void buildIndex();
@@ -42,7 +45,9 @@ public:
 
     // try to delete the given value in the tree
     void removeOne(const Value &v);
+
     void deleter(Limits &limits);
+
     std::vector<unsigned long long> findByRange(
             bool wl, bool leq, const Value &l,
             bool wr, bool req, const Value &r
