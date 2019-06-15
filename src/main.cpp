@@ -4,13 +4,16 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
-#include "BufferManager/BufferManager.hpp"
 #include "CatalogManager/CatalogManager.hpp"
 #include "RecordManager/RecordManager.hpp"
-#include "utils/ErrorManager.hpp"
+#include "BufferManager/BufferManager.hpp"
 #include "IndexManager/IndexManager.hpp"
-#include "API/API.hpp"
 #include "Interpreter/Driver.hpp"
+#include "utils/ErrorManager.hpp"
+#include "utils/info.hpp"
+#include "API/API.hpp"
+
+
 
 interpreter::Driver* driver;
 BufferPtr buffermanager;
@@ -31,7 +34,7 @@ int main() {
         std::cout << "Error occur" << std::endl;
         std::cout << e.msg << std::endl;
     }
-
+    std::cout << WELCOME_BANNER;
     while(true) {
         try {
             try {
