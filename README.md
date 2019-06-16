@@ -1,4 +1,5 @@
 # MiniSQL
+![](./img/banner.png)
 
 Database principle course project
 
