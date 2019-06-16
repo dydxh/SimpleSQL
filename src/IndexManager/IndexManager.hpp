@@ -46,7 +46,7 @@ public:
     // try to delete the given value in the tree
     void removeOne(const Value &v);
 
-    void deleter(Limits &limits);
+    void deleter(Value &value);
 
     std::vector<unsigned long long> findByRange(
             bool wl, bool leq, const Value &l,

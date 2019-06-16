@@ -144,7 +144,11 @@ int API::deleter(const std::string &schemaname, const RawLimits &rawlimits) {
         retval = records.size();
         // delete all the records in indices
         for (auto &a : catalog->schema2indexes[schemaname]) {
-            catalog->name2index[a]->deleter(limit);
+            IndexPtr indexPtr = catalog->name2index[a];
+            int tmpidx = indexPtr->schema->getidx(indexPtr->columnName);
+            for (auto &xd : records) {
+                indexPtr->deleter(xd[tmpidx]);
+            }
         }
     }
     return retval;
