@@ -140,7 +140,8 @@ int API::deleter(const std::string &schemaname, const RawLimits &rawlimits) {
             catalog->dropIndex(a);
         }
     } else {
-        retval = RecordManager::recordbuf[schemaname]->deleter(limit);
+        std::vector<Record> records = RecordManager::recordbuf[schemaname]->deleter(limit);
+        retval = records.size();
         // delete all the records in indices
         for (auto &a : catalog->schema2indexes[schemaname]) {
             catalog->name2index[a]->deleter(limit);

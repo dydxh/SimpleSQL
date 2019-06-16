@@ -34,7 +34,7 @@ public:
 
     void inserter(const Record& record);
     int deleteall();
-    int deleter(const Limits& limit);
+    std::vector<Record> deleter(const Limits& limit);
     std::vector<Record> selecter(const Limits& limit);
     static std::vector<Record> project(const std::vector<Record>& records, const std::vector<int>& idx);
     void readheader();

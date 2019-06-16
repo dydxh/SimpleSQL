@@ -92,8 +92,8 @@ int RecordManager::deleteall() {
     return retval;
 }
 
-int RecordManager::deleter(const Limits &limit) {
-    int retval = 0;
+std::vector<Record> RecordManager::deleter(const Limits &limit) {
+    std::vector<Record> retval = std::vector<Record>();
     BlockPtr tmpblk;
     unsigned long long ptr = header.recordstart;
     while (ptr) {
@@ -123,13 +123,13 @@ int RecordManager::deleter(const Limits &limit) {
             if (to_delete == false) break;
         }
         if (to_delete) {
-            retval += 1;
+            retval.push_back(record);
             unsigned long long newval = ptr | DELETE_TAG;
             tmpblk->setoffset(pos.second);
             tmpblk->write(&newval, sizeof(unsigned long long));
         }
     }
-    header.recordnumber -= retval;
+    header.recordnumber -= retval.size();
     tmpblk = buffer->getblock(MakeID(file, 0));
     tmpblk->setoffset(0);
     tmpblk->write(&this->header, sizeof(this->header));
